@@ -1,4 +1,4 @@
-package com.laulem.vectopath.referential.api.infra.conf.security;
+package com.laulem.vectopath.referential.api.client.security;
 
 public final class SecurityExpressions {
     public static final String REFERENTIAL_READ = "hasAuthority(@securityScopesProperties.referential.read)";

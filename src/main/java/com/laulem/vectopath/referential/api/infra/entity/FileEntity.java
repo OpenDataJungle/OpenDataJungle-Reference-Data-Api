@@ -1,6 +1,5 @@
 package com.laulem.vectopath.referential.api.infra.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -55,6 +54,6 @@ public class FileEntity {
     @JoinColumn(name = "folder_id", insertable = false, updatable = false, nullable = false)
     private FolderEntity folder;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, mappedBy = "file")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "file")
     private Set<FileGroupPermissionEntity> permissions;
 }

@@ -49,7 +49,7 @@ public class PermissionRepositoryAdapter implements PermissionRepository {
     @Transactional
     public Permission save(Permission permission) {
         PermissionEntity entity;
-        if (permission.id() != null && permissionJpaRepository.existsById(permission.id())) {
+        if (permission.id() != null) {
             entity = permissionJpaRepository.findById(permission.id()).orElseThrow();
             entity.setName(permission.name());
             entity.setDescription(permission.description());

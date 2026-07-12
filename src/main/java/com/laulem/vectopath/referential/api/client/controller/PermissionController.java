@@ -5,7 +5,7 @@ import com.laulem.vectopath.referential.api.client.dto.PermissionCreate;
 import com.laulem.vectopath.referential.api.client.dto.PermissionResponse;
 import com.laulem.vectopath.referential.api.client.dto.PermissionUpdate;
 import com.laulem.vectopath.referential.api.client.service.PermissionClientService;
-import com.laulem.vectopath.referential.api.infra.conf.security.SecurityExpressions;
+import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;

@@ -10,6 +10,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -177,6 +178,19 @@ public class GlobalExceptionHandler {
                 null
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<GeneralResponseException> handleDataIntegrityViolationException(DataIntegrityViolationException ex, HttpServletRequest request) {
+        logger.warn("DataIntegrityViolationException: path={}, message={}", request.getRequestURI(), ex.getMessage());
+        GeneralResponseException response = new GeneralResponseException(
+                "CONFLICT",
+                "The resource already exists or violates a unique constraint",
+                buildPath(request),
+                null,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(Exception.class)
