@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "groups", schema = "third_party_ref")
+@Table(name = "groups", schema = "referential")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -48,7 +48,7 @@ public class GroupEntity {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "group_users",
-            schema = "third_party_ref",
+            schema = "referential",
             joinColumns = @JoinColumn(name = "group_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )

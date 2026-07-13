@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "permissions", schema = "third_party_ref")
+@Table(name = "permissions", schema = "referential")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

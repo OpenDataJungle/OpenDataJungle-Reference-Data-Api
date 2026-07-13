@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "folder_group_permissions", schema = "third_party_ref")
+@Table(name = "folder_group_permissions", schema = "referential")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

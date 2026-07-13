@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "folders", schema = "third_party_ref")
+@Table(name = "folders", schema = "referential")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

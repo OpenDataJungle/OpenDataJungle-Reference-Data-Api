@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users", schema = "third_party_ref")
+@Table(name = "users", schema = "referential")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

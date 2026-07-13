@@ -31,10 +31,10 @@ spring:
 security:
   scopes:
     referential:
-      read: ${SECURITY_SCOPE_THIRD_PARTY_REF_READ:referential.read}
-      write: ${SECURITY_SCOPE_THIRD_PARTY_REF_WRITE:referential.write}
-      delete: ${SECURITY_SCOPE_THIRD_PARTY_REF_DELETE:referential.delete}
-      admin: ${SECURITY_SCOPE_THIRD_PARTY_REF_ADMIN:referential.admin}
+      read: ${SECURITY_SCOPE_REFERENTIAL_READ:referential.read}
+      write: ${SECURITY_SCOPE_REFERENTIAL_WRITE:referential.write}
+      delete: ${SECURITY_SCOPE_REFERENTIAL_DELETE:referential.delete}
+      admin: ${SECURITY_SCOPE_REFERENTIAL_ADMIN:referential.admin}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:3000,http://localhost:4200,http://localhost:8080,http://localhost:9000}
     allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}

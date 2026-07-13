@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "files", schema = "third_party_ref",
+@Table(name = "files", schema = "referential",
         uniqueConstraints = @UniqueConstraint(columnNames = {"folder_id", "name"}, name = "uq_file_folder_name"))
 @Data
 @NoArgsConstructor
