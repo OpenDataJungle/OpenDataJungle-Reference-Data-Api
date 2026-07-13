@@ -7,8 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository {
-    PageResult<User> findAll(int page, int size);
-
     PageResult<User> findAll(int page, int size, String username);
 
     Optional<User> findById(UUID id);

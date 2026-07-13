@@ -26,12 +26,6 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<User> findAll(int page, int size) {
-        return findAllByCriteria(page, size, null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public PageResult<User> findAll(int page, int size, String username) {
         return findAllByCriteria(page, size, username);
     }

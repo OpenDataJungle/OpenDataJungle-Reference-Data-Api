@@ -1,0 +1,18 @@
+package com.laulem.vectopath.referential.api.business.service;
+
+import com.laulem.vectopath.referential.api.business.model.Group;
+import com.laulem.vectopath.referential.api.shared.PageResult;
+
+import java.util.UUID;
+
+public interface GroupUseCase {
+    PageResult<Group> findAll(int page, int size, String name);
+
+    Group getById(UUID id);
+
+    Group create(Group group);
+
+    Group update(UUID id, Group group);
+
+    void delete(UUID id);
+}

@@ -1,7 +1,10 @@
 package com.laulem.vectopath.referential.api.infra.conf;
 
+import com.laulem.vectopath.referential.api.business.repository.GroupRepository;
 import com.laulem.vectopath.referential.api.business.repository.PermissionRepository;
 import com.laulem.vectopath.referential.api.business.repository.UserRepository;
+import com.laulem.vectopath.referential.api.business.service.GroupService;
+import com.laulem.vectopath.referential.api.business.service.GroupUseCase;
 import com.laulem.vectopath.referential.api.business.service.PermissionService;
 import com.laulem.vectopath.referential.api.business.service.PermissionUseCase;
 import com.laulem.vectopath.referential.api.business.service.UserService;
@@ -20,5 +23,10 @@ public class BusinessServiceConfiguration {
     @Bean
     public UserUseCase userService(UserRepository userRepository) {
         return new UserService(userRepository);
+    }
+
+    @Bean
+    public GroupUseCase groupService(GroupRepository groupRepository) {
+        return new GroupService(groupRepository);
     }
 }
