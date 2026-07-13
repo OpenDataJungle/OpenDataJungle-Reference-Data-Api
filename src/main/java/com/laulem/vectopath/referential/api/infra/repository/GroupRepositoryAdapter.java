@@ -4,7 +4,6 @@ import com.laulem.vectopath.referential.api.business.model.Group;
 import com.laulem.vectopath.referential.api.business.repository.GroupRepository;
 import com.laulem.vectopath.referential.api.infra.entity.GroupEntity;
 import com.laulem.vectopath.referential.api.shared.PageResult;
-import com.laulem.vectopath.referential.api.shared.util.DateUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -66,7 +65,6 @@ public class GroupRepositoryAdapter implements GroupRepository {
             entity = groupJpaRepository.findById(group.id()).orElseThrow();
             entity.setName(group.name());
             entity.setDescription(group.description());
-            entity.setUpdatedAt(DateUtils.now());
         } else {
             entity = toEntity(group);
             entity.setId(UUID.randomUUID());
