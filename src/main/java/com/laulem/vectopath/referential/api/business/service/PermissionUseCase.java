@@ -6,7 +6,7 @@ import com.laulem.vectopath.referential.api.shared.PageResult;
 import java.util.UUID;
 
 public interface PermissionUseCase {
-    PageResult<Permission> getAll(int page, int size);
+    PageResult<Permission> findAll(int page, int size);
 
     Permission getById(UUID id);
 

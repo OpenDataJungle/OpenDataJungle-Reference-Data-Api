@@ -15,7 +15,9 @@ DROP TABLE IF EXISTS referential.users;
 
 CREATE TABLE referential.users (
                        id UUID PRIMARY KEY,
-                       name VARCHAR NOT NULL,
+                       first_name VARCHAR NOT NULL,
+                       last_name VARCHAR NOT NULL,
+                       username VARCHAR NOT NULL UNIQUE,
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

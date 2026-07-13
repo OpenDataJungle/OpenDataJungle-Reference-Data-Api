@@ -30,7 +30,13 @@ public class UserEntity {
     private UUID id;
 
     @Column(nullable = false)
-    private String name;
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

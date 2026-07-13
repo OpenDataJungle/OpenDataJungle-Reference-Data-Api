@@ -1,11 +1,11 @@
 package com.laulem.vectopath.referential.api.client.controller;
 
-import com.laulem.vectopath.referential.api.business.model.Permission;
-import com.laulem.vectopath.referential.api.business.service.PermissionUseCase;
+import com.laulem.vectopath.referential.api.business.model.User;
+import com.laulem.vectopath.referential.api.business.service.UserUseCase;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
-import com.laulem.vectopath.referential.api.client.dto.PermissionCreate;
-import com.laulem.vectopath.referential.api.client.dto.PermissionResponse;
-import com.laulem.vectopath.referential.api.client.dto.PermissionUpdate;
+import com.laulem.vectopath.referential.api.client.dto.UserCreate;
+import com.laulem.vectopath.referential.api.client.dto.UserResponse;
+import com.laulem.vectopath.referential.api.client.dto.UserUpdate;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import com.laulem.vectopath.referential.api.shared.PageResult;
 import jakarta.validation.Valid;
@@ -29,23 +29,24 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/permissions")
+@RequestMapping("/api/v1/users")
 @Validated
 @AllArgsConstructor
-public class PermissionController {
+public class UserController {
 
-    private final PermissionUseCase permissionUseCase;
+    private final UserUseCase userUseCase;
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
     @GetMapping
-    public PaginatedResponse<PermissionResponse> getAllPermissions(
+    public PaginatedResponse<UserResponse> getAllUsers(
+            @RequestParam(required = false) String username,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "50") @Min(1) int size) {
-        PageResult<Permission> businessResponse = permissionUseCase.findAll(page, size);
+        PageResult<User> businessResponse = userUseCase.findAll(page, size, username);
 
-        return PaginatedResponse.<PermissionResponse>builder()
+        return PaginatedResponse.<UserResponse>builder()
                 .content(businessResponse.content().stream()
-                        .map(PermissionResponse::fromBusiness)
+                        .map(UserResponse::fromBusiness)
                         .toList())
                 .totalElements(businessResponse.totalElements())
                 .totalPages(businessResponse.totalPages())
@@ -56,30 +57,30 @@ public class PermissionController {
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
     @GetMapping("/{id}")
-    public PermissionResponse getPermissionById(@PathVariable UUID id) {
-        return PermissionResponse.fromBusiness(permissionUseCase.getById(id));
+    public UserResponse getUserById(@PathVariable UUID id) {
+        return UserResponse.fromBusiness(userUseCase.getById(id));
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public PermissionResponse createPermission(@Valid @RequestBody PermissionCreate permissionCreate) {
-        Permission createdPermission = permissionUseCase.create(permissionCreate.toBusiness());
-        return PermissionResponse.fromBusiness(createdPermission);
+    public UserResponse createUser(@Valid @RequestBody UserCreate userCreate) {
+        User createdUser = userUseCase.create(userCreate.toBusiness());
+        return UserResponse.fromBusiness(createdUser);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @PutMapping("/{id}")
-    public PermissionResponse updatePermission(
+    public UserResponse updateUser(
             @PathVariable UUID id,
-            @Valid @RequestBody PermissionUpdate permissionUpdate) {
-        Permission updatedPermission = permissionUseCase.update(id, permissionUpdate.toBusiness());
-        return PermissionResponse.fromBusiness(updatedPermission);
+            @Valid @RequestBody UserUpdate userUpdate) {
+        User updatedUser = userUseCase.update(id, userUpdate.toBusiness());
+        return UserResponse.fromBusiness(updatedUser);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_DELETE)
     @DeleteMapping("/{id}")
-    public void deletePermission(@PathVariable UUID id) {
-        permissionUseCase.delete(id);
+    public void deleteUser(@PathVariable UUID id) {
+        userUseCase.delete(id);
     }
 }

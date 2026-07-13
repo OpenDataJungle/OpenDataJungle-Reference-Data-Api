@@ -2,6 +2,7 @@ package com.laulem.vectopath.referential.api.business.service;
 
 import com.laulem.vectopath.referential.api.business.exception.NotFoundException;
 import com.laulem.vectopath.referential.api.business.exception.ParamException;
+import com.laulem.vectopath.referential.api.business.model.Permission;
 import com.laulem.vectopath.referential.api.business.repository.PermissionRepository;
 import com.laulem.vectopath.referential.api.shared.PageResult;
 
@@ -18,18 +19,18 @@ public class PermissionService implements PermissionUseCase {
     }
 
     @Override
-    public PageResult<com.laulem.vectopath.referential.api.business.model.Permission> getAll(int page, int size) {
+    public PageResult<Permission> findAll(int page, int size) {
         return permissionRepository.findAll(page, size);
     }
 
     @Override
-    public com.laulem.vectopath.referential.api.business.model.Permission getById(UUID id) {
+    public Permission getById(UUID id) {
         return permissionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(PERMISSION, id.toString()));
     }
 
     @Override
-    public com.laulem.vectopath.referential.api.business.model.Permission create(com.laulem.vectopath.referential.api.business.model.Permission permission) {
+    public Permission create(Permission permission) {
         if (permissionRepository.existsByName(permission.name())) {
             throw new ParamException(
                     "PERMISSION_NAME_ALREADY_EXISTS",
@@ -41,7 +42,7 @@ public class PermissionService implements PermissionUseCase {
     }
 
     @Override
-    public com.laulem.vectopath.referential.api.business.model.Permission update(UUID id, com.laulem.vectopath.referential.api.business.model.Permission permission) {
+    public Permission update(UUID id, Permission permission) {
         if (!permissionRepository.existsById(id)) {
             throw new NotFoundException(PERMISSION, id.toString());
         }
@@ -52,7 +53,7 @@ public class PermissionService implements PermissionUseCase {
                     "name"
             );
         }
-        com.laulem.vectopath.referential.api.business.model.Permission toUpdate = com.laulem.vectopath.referential.api.business.model.Permission.builder()
+        Permission toUpdate = Permission.builder()
                 .id(id)
                 .name(permission.name())
                 .description(permission.description())
