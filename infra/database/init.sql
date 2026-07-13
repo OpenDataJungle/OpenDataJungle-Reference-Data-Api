@@ -1,26 +1,26 @@
-CREATE SCHEMA IF NOT EXISTS third_party_ref;
-SET search_path TO third_party_ref, public;
+CREATE SCHEMA IF NOT EXISTS referential;
+SET search_path TO referential, public;
 
 
-DROP TABLE IF EXISTS third_party_ref.file_group_permissions;
-DROP TABLE IF EXISTS third_party_ref.folder_group_permissions;
-DROP TABLE IF EXISTS third_party_ref.group_users;
+DROP TABLE IF EXISTS referential.file_group_permissions;
+DROP TABLE IF EXISTS referential.folder_group_permissions;
+DROP TABLE IF EXISTS referential.group_users;
 
-DROP TABLE IF EXISTS third_party_ref.files;
-DROP TABLE IF EXISTS third_party_ref.folders;
+DROP TABLE IF EXISTS referential.files;
+DROP TABLE IF EXISTS referential.folders;
 
-DROP TABLE IF EXISTS third_party_ref.permissions;
-DROP TABLE IF EXISTS third_party_ref.groups;
-DROP TABLE IF EXISTS third_party_ref.users;
+DROP TABLE IF EXISTS referential.permissions;
+DROP TABLE IF EXISTS referential.groups;
+DROP TABLE IF EXISTS referential.users;
 
-CREATE TABLE third_party_ref.users (
+CREATE TABLE referential.users (
                        id UUID PRIMARY KEY,
                        name VARCHAR NOT NULL,
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE third_party_ref.groups (
+CREATE TABLE referential.groups (
                         id UUID PRIMARY KEY,
                         name VARCHAR NOT NULL UNIQUE,
                         description TEXT,
@@ -28,13 +28,13 @@ CREATE TABLE third_party_ref.groups (
                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE third_party_ref.group_users (
-                             group_id UUID NOT NULL REFERENCES third_party_ref.groups(id) ON DELETE CASCADE,
-                             user_id UUID NOT NULL REFERENCES third_party_ref.users(id) ON DELETE CASCADE,
+CREATE TABLE referential.group_users (
+                             group_id UUID NOT NULL REFERENCES referential.groups(id) ON DELETE CASCADE,
+                             user_id UUID NOT NULL REFERENCES referential.users(id) ON DELETE CASCADE,
                              PRIMARY KEY (group_id, user_id)
 );
 
-CREATE TABLE third_party_ref.permissions (
+CREATE TABLE referential.permissions (
                              id UUID PRIMARY KEY,
                              name VARCHAR NOT NULL UNIQUE,
                              description TEXT,
@@ -43,7 +43,9 @@ CREATE TABLE third_party_ref.permissions (
                              is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE third_party_ref.folders (
+-- Déplacer
+
+CREATE TABLE referential.folders (
                          id UUID PRIMARY KEY,
                          name VARCHAR NOT NULL,
                          path VARCHAR NOT NULL UNIQUE,
@@ -51,26 +53,26 @@ CREATE TABLE third_party_ref.folders (
                          updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE third_party_ref.files (
+CREATE TABLE referential.files (
                        id UUID PRIMARY KEY,
-                       folder_id UUID NOT NULL REFERENCES third_party_ref.folders(id) ON DELETE CASCADE,
+                       folder_id UUID NOT NULL REFERENCES referential.folders(id) ON DELETE CASCADE,
                        name VARCHAR NOT NULL,
                        path VARCHAR NOT NULL UNIQUE,
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE third_party_ref.folder_group_permissions (
-                                          folder_id UUID NOT NULL REFERENCES third_party_ref.folders(id) ON DELETE CASCADE,
-                                          group_id UUID NOT NULL REFERENCES third_party_ref.groups(id) ON DELETE CASCADE,
-                                          permission_id UUID NOT NULL REFERENCES third_party_ref.permissions(id),
+CREATE TABLE referential.folder_group_permissions (
+                                          folder_id UUID NOT NULL REFERENCES referential.folders(id) ON DELETE CASCADE,
+                                          group_id UUID NOT NULL REFERENCES referential.groups(id) ON DELETE CASCADE,
+                                          permission_id UUID NOT NULL REFERENCES referential.permissions(id),
                                           PRIMARY KEY (folder_id, group_id)
 );
 
-CREATE TABLE third_party_ref.file_group_permissions (
-                                        file_id UUID NOT NULL REFERENCES third_party_ref.files(id) ON DELETE CASCADE,
-                                        group_id UUID NOT NULL REFERENCES third_party_ref.groups(id) ON DELETE CASCADE,
-                                        permission_id UUID NOT NULL REFERENCES third_party_ref.permissions(id),
+CREATE TABLE referential.file_group_permissions (
+                                        file_id UUID NOT NULL REFERENCES referential.files(id) ON DELETE CASCADE,
+                                        group_id UUID NOT NULL REFERENCES referential.groups(id) ON DELETE CASCADE,
+                                        permission_id UUID NOT NULL REFERENCES referential.permissions(id),
                                         PRIMARY KEY (file_id, group_id)
 );
 

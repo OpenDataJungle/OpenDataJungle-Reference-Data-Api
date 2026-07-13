@@ -1,11 +1,13 @@
 package com.laulem.vectopath.referential.api.client.controller;
 
+import com.laulem.vectopath.referential.api.business.model.Permission;
+import com.laulem.vectopath.referential.api.business.service.PermissionUseCase;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
 import com.laulem.vectopath.referential.api.client.dto.PermissionCreate;
 import com.laulem.vectopath.referential.api.client.dto.PermissionResponse;
 import com.laulem.vectopath.referential.api.client.dto.PermissionUpdate;
-import com.laulem.vectopath.referential.api.client.service.PermissionClientService;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
+import com.laulem.vectopath.referential.api.shared.PageResult;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
@@ -32,27 +34,38 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PermissionController {
 
-    private final PermissionClientService permissionService;
+    private final PermissionUseCase permissionUseCase;
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
     @GetMapping
     public PaginatedResponse<PermissionResponse> getAllPermissions(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "50") @Min(1) int size) {
-        return permissionService.getAll(page, size);
+        PageResult<Permission> businessResponse = permissionUseCase.getAll(page, size);
+
+        return PaginatedResponse.<PermissionResponse>builder()
+                .content(businessResponse.content().stream()
+                        .map(PermissionResponse::fromBusiness)
+                        .toList())
+                .totalElements(businessResponse.totalElements())
+                .totalPages(businessResponse.totalPages())
+                .currentPage(businessResponse.currentPage())
+                .pageSize(businessResponse.pageSize())
+                .build();
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
     @GetMapping("/{id}")
     public PermissionResponse getPermissionById(@PathVariable UUID id) {
-        return permissionService.getById(id);
+        return PermissionResponse.fromBusiness(permissionUseCase.getById(id));
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public PermissionResponse createPermission(@Valid @RequestBody PermissionCreate permissionCreate) {
-        return permissionService.create(permissionCreate);
+        Permission createdPermission = permissionUseCase.create(permissionCreate.toBusiness());
+        return PermissionResponse.fromBusiness(createdPermission);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
@@ -60,12 +73,13 @@ public class PermissionController {
     public PermissionResponse updatePermission(
             @PathVariable UUID id,
             @Valid @RequestBody PermissionUpdate permissionUpdate) {
-        return permissionService.update(id, permissionUpdate);
+        Permission updatedPermission = permissionUseCase.update(id, permissionUpdate.toBusiness());
+        return PermissionResponse.fromBusiness(updatedPermission);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_DELETE)
     @DeleteMapping("/{id}")
     public void deletePermission(@PathVariable UUID id) {
-        permissionService.delete(id);
+        permissionUseCase.delete(id);
     }
 }
