@@ -3,9 +3,8 @@ package com.laulem.vectopath.referential.api.client.controller;
 import com.laulem.vectopath.referential.api.business.model.Permission;
 import com.laulem.vectopath.referential.api.business.service.PermissionUseCase;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
-import com.laulem.vectopath.referential.api.client.dto.PermissionCreate;
+import com.laulem.vectopath.referential.api.client.dto.PermissionRequest;
 import com.laulem.vectopath.referential.api.client.dto.PermissionResponse;
-import com.laulem.vectopath.referential.api.client.dto.PermissionUpdate;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import com.laulem.vectopath.referential.api.shared.PageResult;
 import jakarta.validation.Valid;
@@ -63,8 +62,8 @@ public class PermissionController {
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public PermissionResponse createPermission(@Valid @RequestBody PermissionCreate permissionCreate) {
-        Permission createdPermission = permissionUseCase.create(permissionCreate.toBusiness());
+    public PermissionResponse createPermission(@Valid @RequestBody PermissionRequest permissionRequest) {
+        Permission createdPermission = permissionUseCase.create(permissionRequest.toBusiness());
         return PermissionResponse.fromBusiness(createdPermission);
     }
 
@@ -72,8 +71,8 @@ public class PermissionController {
     @PutMapping("/{id}")
     public PermissionResponse updatePermission(
             @PathVariable UUID id,
-            @Valid @RequestBody PermissionUpdate permissionUpdate) {
-        Permission updatedPermission = permissionUseCase.update(id, permissionUpdate.toBusiness());
+            @Valid @RequestBody PermissionRequest permissionRequest) {
+        Permission updatedPermission = permissionUseCase.update(id, permissionRequest.toBusiness());
         return PermissionResponse.fromBusiness(updatedPermission);
     }
 

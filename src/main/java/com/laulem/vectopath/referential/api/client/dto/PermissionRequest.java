@@ -1,6 +1,5 @@
 package com.laulem.vectopath.referential.api.client.dto;
 
-import com.laulem.vectopath.referential.api.business.model.Permission;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -10,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PermissionCreate {
+public class PermissionRequest {
     @NotBlank(message = "Permission name is required")
     private String name;
 
@@ -26,8 +25,8 @@ public class PermissionCreate {
     @NotNull(message = "isAdmin is required")
     private Boolean isAdmin;
 
-    public Permission toBusiness() {
-        return Permission.builder()
+    public com.laulem.vectopath.referential.api.business.model.Permission toBusiness() {
+        return com.laulem.vectopath.referential.api.business.model.Permission.builder()
                 .name(this.name)
                 .description(this.description)
                 .canRead(this.canRead)

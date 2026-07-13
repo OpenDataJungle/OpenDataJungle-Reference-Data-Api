@@ -3,9 +3,8 @@ package com.laulem.vectopath.referential.api.client.controller;
 import com.laulem.vectopath.referential.api.business.model.User;
 import com.laulem.vectopath.referential.api.business.service.UserUseCase;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
-import com.laulem.vectopath.referential.api.client.dto.UserCreate;
+import com.laulem.vectopath.referential.api.client.dto.UserRequest;
 import com.laulem.vectopath.referential.api.client.dto.UserResponse;
-import com.laulem.vectopath.referential.api.client.dto.UserUpdate;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import com.laulem.vectopath.referential.api.shared.PageResult;
 import jakarta.validation.Valid;
@@ -64,8 +63,8 @@ public class UserController {
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public UserResponse createUser(@Valid @RequestBody UserCreate userCreate) {
-        User createdUser = userUseCase.create(userCreate.toBusiness());
+    public UserResponse createUser(@Valid @RequestBody UserRequest userRequest) {
+        User createdUser = userUseCase.create(userRequest.toBusiness());
         return UserResponse.fromBusiness(createdUser);
     }
 
@@ -73,8 +72,8 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponse updateUser(
             @PathVariable UUID id,
-            @Valid @RequestBody UserUpdate userUpdate) {
-        User updatedUser = userUseCase.update(id, userUpdate.toBusiness());
+            @Valid @RequestBody UserRequest userRequest) {
+        User updatedUser = userUseCase.update(id, userRequest.toBusiness());
         return UserResponse.fromBusiness(updatedUser);
     }
 

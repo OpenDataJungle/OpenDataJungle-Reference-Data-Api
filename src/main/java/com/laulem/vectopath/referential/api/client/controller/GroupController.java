@@ -2,9 +2,8 @@ package com.laulem.vectopath.referential.api.client.controller;
 
 import com.laulem.vectopath.referential.api.business.model.Group;
 import com.laulem.vectopath.referential.api.business.service.GroupUseCase;
-import com.laulem.vectopath.referential.api.client.dto.GroupCreate;
+import com.laulem.vectopath.referential.api.client.dto.GroupRequest;
 import com.laulem.vectopath.referential.api.client.dto.GroupResponse;
-import com.laulem.vectopath.referential.api.client.dto.GroupUpdate;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import com.laulem.vectopath.referential.api.shared.PageResult;
@@ -64,8 +63,8 @@ public class GroupController {
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public GroupResponse createGroup(@Valid @RequestBody GroupCreate groupCreate) {
-        Group createdGroup = groupUseCase.create(groupCreate.toBusiness());
+    public GroupResponse createGroup(@Valid @RequestBody GroupRequest groupRequest) {
+        Group createdGroup = groupUseCase.create(groupRequest.toBusiness());
         return GroupResponse.fromBusiness(createdGroup);
     }
 
@@ -73,8 +72,8 @@ public class GroupController {
     @PutMapping("/{id}")
     public GroupResponse updateGroup(
             @PathVariable UUID id,
-            @Valid @RequestBody GroupUpdate groupUpdate) {
-        Group updatedGroup = groupUseCase.update(id, groupUpdate.toBusiness());
+            @Valid @RequestBody GroupRequest groupRequest) {
+        Group updatedGroup = groupUseCase.update(id, groupRequest.toBusiness());
         return GroupResponse.fromBusiness(updatedGroup);
     }
 
