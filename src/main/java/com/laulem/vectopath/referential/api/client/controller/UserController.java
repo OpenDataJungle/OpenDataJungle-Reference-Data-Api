@@ -5,6 +5,7 @@ import com.laulem.vectopath.referential.api.business.service.UserUseCase;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
 import com.laulem.vectopath.referential.api.client.dto.UserRequest;
 import com.laulem.vectopath.referential.api.client.dto.UserResponse;
+import com.laulem.vectopath.referential.api.client.mapper.PaginatedResponseMapper;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import com.laulem.vectopath.referential.api.shared.PageResult;
 import jakarta.validation.Valid;
@@ -42,16 +43,7 @@ public class UserController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "50") @Min(1) int size) {
         PageResult<User> businessResponse = userUseCase.findAll(page, size, username);
-
-        return PaginatedResponse.<UserResponse>builder()
-                .content(businessResponse.content().stream()
-                        .map(UserResponse::fromBusiness)
-                        .toList())
-                .totalElements(businessResponse.totalElements())
-                .totalPages(businessResponse.totalPages())
-                .currentPage(businessResponse.currentPage())
-                .pageSize(businessResponse.pageSize())
-                .build();
+        return PaginatedResponseMapper.toPaginatedResponse(businessResponse, UserResponse::fromBusiness);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)

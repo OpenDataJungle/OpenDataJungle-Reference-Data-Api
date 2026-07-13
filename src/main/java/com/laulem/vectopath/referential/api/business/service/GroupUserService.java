@@ -21,8 +21,8 @@ public class GroupUserService implements GroupUserUseCase {
     private final GroupRepository groupRepository;
 
     public GroupUserService(GroupUserRepository groupUserRepository,
-                           UserRepository userRepository,
-                           GroupRepository groupRepository) {
+                            UserRepository userRepository,
+                            GroupRepository groupRepository) {
         this.groupUserRepository = groupUserRepository;
         this.userRepository = userRepository;
         this.groupRepository = groupRepository;
