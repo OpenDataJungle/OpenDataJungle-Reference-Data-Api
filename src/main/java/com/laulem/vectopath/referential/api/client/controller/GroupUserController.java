@@ -1,11 +1,9 @@
 package com.laulem.vectopath.referential.api.client.controller;
 
-import com.laulem.vectopath.referential.api.business.model.Group;
-import com.laulem.vectopath.referential.api.business.model.User;
+import com.laulem.vectopath.referential.api.business.model.GroupUser;
 import com.laulem.vectopath.referential.api.business.service.GroupUserUseCase;
-import com.laulem.vectopath.referential.api.client.dto.GroupResponse;
+import com.laulem.vectopath.referential.api.client.dto.GroupUserResponse;
 import com.laulem.vectopath.referential.api.client.dto.PaginatedResponse;
-import com.laulem.vectopath.referential.api.client.dto.UserResponse;
 import com.laulem.vectopath.referential.api.client.mapper.PaginatedResponseMapper;
 import com.laulem.vectopath.referential.api.client.security.SecurityExpressions;
 import com.laulem.vectopath.referential.api.shared.PageResult;
@@ -35,31 +33,32 @@ public class GroupUserController {
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
     @GetMapping("/users/{userId}/groups")
-    public PaginatedResponse<GroupResponse> getGroupsByUserId(
+    public PaginatedResponse<GroupUserResponse> getGroupsByUserId(
             @PathVariable UUID userId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "50") @Min(1) int size) {
-        PageResult<Group> businessResponse = groupUserUseCase.getGroupsByUserId(userId, page, size);
-        return PaginatedResponseMapper.toPaginatedResponse(businessResponse, GroupResponse::fromBusiness);
+        PageResult<GroupUser> businessResponse = groupUserUseCase.getGroupsByUserId(userId, page, size);
+        return PaginatedResponseMapper.toPaginatedResponse(businessResponse, GroupUserResponse::fromBusiness);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
     @GetMapping("/groups/{groupId}/users")
-    public PaginatedResponse<UserResponse> getUsersByGroupId(
+    public PaginatedResponse<GroupUserResponse> getUsersByGroupId(
             @PathVariable UUID groupId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "50") @Min(1) int size) {
-        PageResult<User> businessResponse = groupUserUseCase.getUsersByGroupId(groupId, page, size);
-        return PaginatedResponseMapper.toPaginatedResponse(businessResponse, UserResponse::fromBusiness);
+        PageResult<GroupUser> businessResponse = groupUserUseCase.getUsersByGroupId(groupId, page, size);
+        return PaginatedResponseMapper.toPaginatedResponse(businessResponse, GroupUserResponse::fromBusiness);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/groups/{groupId}/users/{userId}")
+    @PostMapping("/groups/{groupId}/users/{userId}/permissions/{permissionId}")
     public void addUserToGroup(
             @PathVariable UUID groupId,
-            @PathVariable UUID userId) {
-        groupUserUseCase.addUserToGroup(groupId, userId);
+            @PathVariable UUID userId,
+            @PathVariable UUID permissionId) {
+        groupUserUseCase.addUserToGroup(groupId, userId, permissionId);
     }
 
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)

@@ -3,9 +3,11 @@ package com.laulem.vectopath.referential.api.business.service;
 import com.laulem.vectopath.referential.api.business.exception.NotFoundException;
 import com.laulem.vectopath.referential.api.business.exception.ParamException;
 import com.laulem.vectopath.referential.api.business.model.Group;
+import com.laulem.vectopath.referential.api.business.model.GroupUser;
 import com.laulem.vectopath.referential.api.business.model.User;
 import com.laulem.vectopath.referential.api.business.repository.GroupRepository;
 import com.laulem.vectopath.referential.api.business.repository.GroupUserRepository;
+import com.laulem.vectopath.referential.api.business.repository.PermissionRepository;
 import com.laulem.vectopath.referential.api.business.repository.UserRepository;
 import com.laulem.vectopath.referential.api.shared.PageResult;
 
@@ -15,42 +17,48 @@ public class GroupUserService implements GroupUserUseCase {
 
     private static final String USER = "User";
     private static final String GROUP = "Group";
+    private static final String PERMISSION = "Permission";
 
     private final GroupUserRepository groupUserRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final PermissionRepository permissionRepository;
 
     public GroupUserService(GroupUserRepository groupUserRepository,
                             UserRepository userRepository,
-                            GroupRepository groupRepository) {
+                            GroupRepository groupRepository,
+                            PermissionRepository permissionRepository) {
         this.groupUserRepository = groupUserRepository;
         this.userRepository = userRepository;
         this.groupRepository = groupRepository;
+        this.permissionRepository = permissionRepository;
     }
 
     @Override
-    public PageResult<Group> getGroupsByUserId(UUID userId, int page, int size) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException(USER, userId.toString());
-        }
-        return groupUserRepository.findGroupsByUserId(userId, page, size);
+    public PageResult<GroupUser> getGroupsByUserId(UUID userId, int page, int size) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER, userId.toString()));
+        return groupUserRepository.findGroupsByUserId(user, page, size);
     }
 
     @Override
-    public PageResult<User> getUsersByGroupId(UUID groupId, int page, int size) {
+    public PageResult<GroupUser> getUsersByGroupId(UUID groupId, int page, int size) {
+        Group group = groupRepository.findById(groupId).orElseThrow(() -> new NotFoundException(GROUP, groupId.toString()));
         if (!groupRepository.existsById(groupId)) {
             throw new NotFoundException(GROUP, groupId.toString());
         }
-        return groupUserRepository.findUsersByGroupId(groupId, page, size);
+        return groupUserRepository.findUsersByGroupId(group, page, size);
     }
 
     @Override
-    public void addUserToGroup(UUID groupId, UUID userId) {
+    public void addUserToGroup(UUID groupId, UUID userId, UUID permissionId) {
         if (!groupRepository.existsById(groupId)) {
             throw new NotFoundException(GROUP, groupId.toString());
         }
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(USER, userId.toString());
+        }
+        if (!permissionRepository.existsById(permissionId)) {
+            throw new NotFoundException(PERMISSION, permissionId.toString());
         }
         if (groupUserRepository.isUserInGroup(groupId, userId)) {
             throw new ParamException(
@@ -59,7 +67,7 @@ public class GroupUserService implements GroupUserUseCase {
                     "userId"
             );
         }
-        groupUserRepository.addUserToGroup(groupId, userId);
+        groupUserRepository.addUserToGroup(groupId, userId, permissionId);
     }
 
     @Override

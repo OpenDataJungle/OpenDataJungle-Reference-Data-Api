@@ -1,5 +1,6 @@
 package com.laulem.vectopath.referential.api.client.dto;
 
+import com.laulem.vectopath.referential.api.business.model.Group;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,8 +15,8 @@ public class GroupRequest {
 
     private String description;
 
-    public com.laulem.vectopath.referential.api.business.model.Group toBusiness() {
-        return com.laulem.vectopath.referential.api.business.model.Group.builder()
+    public Group toBusiness() {
+        return Group.builder()
                 .name(this.name)
                 .description(this.description)
                 .build();

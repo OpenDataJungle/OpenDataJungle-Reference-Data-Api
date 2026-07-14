@@ -47,7 +47,7 @@ public class UserUtils {
     public static String getUsername() {
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
-                .filter(auth -> auth != null && auth.isAuthenticated())
+                .filter(auth -> auth.isAuthenticated())
                 .map(Authentication::getName)
                 .orElse("UNAUTHENTICATED");
     }
