@@ -52,6 +52,18 @@ public class UserController {
         return UserResponse.fromBusiness(userUseCase.getById(id));
     }
 
+    @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
+    @GetMapping("/username/{username}")
+    public UserResponse getUserByUsername(@PathVariable String username) {
+        return UserResponse.fromBusiness(userUseCase.getByUsername(username));
+    }
+
+    @PreAuthorize(SecurityExpressions.REFERENTIAL_READ)
+    @PostMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
+    public UserResponse getOrCreateMe() {
+        return UserResponse.fromBusiness(userUseCase.getOrCreateCurrentUser());
+    }
+
     @PreAuthorize(SecurityExpressions.REFERENTIAL_WRITE)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

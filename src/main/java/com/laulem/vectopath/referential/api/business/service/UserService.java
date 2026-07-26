@@ -13,9 +13,11 @@ public class UserService implements UserUseCase {
     private static final String USER = "User";
 
     private final UserRepository userRepository;
+    private final AuthenticationUseCase authenticationUseCase;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, AuthenticationUseCase authenticationUseCase) {
         this.userRepository = userRepository;
+        this.authenticationUseCase = authenticationUseCase;
     }
 
     @Override
@@ -68,5 +70,43 @@ public class UserService implements UserUseCase {
             throw new NotFoundException(USER, id.toString());
         }
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public User getByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException(USER, username));
+    }
+
+    @Override
+    public User getOrCreateCurrentUser() {
+        String username = authenticationUseCase.findCurrentUser()
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParamException(
+                        "USER_USERNAME_REQUIRED",
+                        "Current authenticated user has no username",
+                        "username"
+                ));
+        String firstName = authenticationUseCase.findCurrentUserFirstName()
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParamException(
+                        "USER_FIRST_NAME_REQUIRED",
+                        "Current authenticated user has no first name",
+                        "firstName"
+                ));
+        String lastName = authenticationUseCase.findCurrentUserLastName()
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParamException(
+                        "USER_LAST_NAME_REQUIRED",
+                        "Current authenticated user has no last name",
+                        "lastName"
+                ));
+
+        return userRepository.findByUsername(username)
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .username(username)
+                        .build()));
     }
 }

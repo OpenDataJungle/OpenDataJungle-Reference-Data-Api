@@ -15,4 +15,8 @@ public interface UserUseCase {
     User update(UUID id, User user);
 
     void delete(UUID id);
+
+    User getByUsername(String username);
+
+    User getOrCreateCurrentUser();
 }

@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS referential.permissions;
 DROP TABLE IF EXISTS referential.groups;
 DROP TABLE IF EXISTS referential.users;
 
+DROP INDEX IF EXISTS idx_group_users_group_id;
+
 CREATE TABLE referential.users (
                        id UUID PRIMARY KEY,
                        first_name VARCHAR NOT NULL,
@@ -41,5 +43,18 @@ CREATE TABLE referential.group_users (
 );
 
 
+-- Default user and group (default user : anonymous) and root group (default group : root)
+INSERT INTO referential.users (id, first_name, last_name, username)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Anonymous', 'User', 'anonymous');
 
+INSERT INTO referential.groups (id, name, description)
+VALUES ('00000000-0000-0000-0000-000000000001', 'root', 'Root group with all permissions');
 
+-- Permission
+INSERT INTO referential.permissions (id, name, description, can_read, can_write, is_admin)
+VALUES ('00000000-0000-0000-0000-000000000001', 'root_permission', 'Root permission with all access rights', TRUE, TRUE, TRUE);
+
+INSERT INTO referential.group_users (group_id, user_id, permission_id)
+VALUES ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001');
+
+CREATE INDEX idx_group_users_group_id ON referential.group_users(group_id);

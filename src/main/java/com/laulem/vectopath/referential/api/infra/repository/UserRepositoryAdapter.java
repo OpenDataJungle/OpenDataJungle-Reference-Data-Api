@@ -118,4 +118,10 @@ public class UserRepositoryAdapter implements UserRepository {
                 .updatedAt(user.updatedAt())
                 .build();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<User> findByUsername(String username) {
+        return userJpaRepository.findByUsername(username).map(this::toBusinessModel);
+    }
 }
