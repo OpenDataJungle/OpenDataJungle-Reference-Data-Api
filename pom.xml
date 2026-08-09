@@ -8,10 +8,10 @@
         <version>4.1.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.laulem</groupId>
-    <artifactId>VectoPath-Referential-Api</artifactId>
+    <groupId>com.opendatajungle</groupId>
+    <artifactId>Referential-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>VectoPath-Referential-Api</name>
+    <name>OpenDataJungle Referential Api</name>
     <properties>
         <java.version>25</java.version>
         <archunit.version>1.4.1</archunit.version>

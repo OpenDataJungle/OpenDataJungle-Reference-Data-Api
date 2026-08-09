@@ -2,6 +2,11 @@
 set -euo pipefail  # Exit on error, undefined vars, and pipeline failures
 IFS=$'\n\t'       # Stricter word splitting
 
+# Configure Docker socket permissions for testcontainers
+if [ -S /var/run/docker.sock ]; then
+    chmod 666 /var/run/docker.sock
+fi
+
 # 1. Extract Docker DNS info BEFORE any flushing
 DOCKER_DNS_RULES=$(iptables-save -t nat | grep "127\.0\.0\.11" || true)
 
@@ -67,6 +72,7 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 for domain in \
     "registry.npmjs.org" \
     "api.anthropic.com" \
+    "api.openai.com" \
     "sentry.io" \
     "statsig.anthropic.com" \
     "statsig.com" \
@@ -81,6 +87,12 @@ for domain in \
     "cdn.jsdelivr.net" \
     "unpkg.com" \
     "packages.adoptium.net" \
+    "github.com" \
+    "api.github.com" \
+    "ssh.github.com" \
+    "objects.githubusercontent.com" \
+    "raw.githubusercontent.com" \
+    "codeload.github.com" \
     "laulem.com"; do
     echo "Resolving $domain..."
     ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')

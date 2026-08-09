@@ -61,11 +61,11 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
 # Set `DEVCONTAINER` environment variable to help with orientation
 ENV DEVCONTAINER=true
 
-# Create workspace, config and maven repository directories and set permissions
-RUN mkdir -p /workspace /home/node/.claude /home/node/.m2 && \
-  chown -R node:node /workspace /home/node/.claude /home/node/.m2
+# Create OpenDataJungle-Referential-Api, config and maven repository directories and set permissions
+RUN mkdir -p /OpenDataJungle-Referential-Api /home/node/.claude /home/node/.m2 && \
+  chown -R node:node /OpenDataJungle-Referential-Api /home/node/.claude /home/node/.m2
 
-WORKDIR /workspace
+WORKDIR /OpenDataJungle-Referential-Api
 
 ARG GIT_DELTA_VERSION=0.18.2
 RUN ARCH=$(dpkg --print-architecture) && \

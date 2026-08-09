@@ -1,10 +1,10 @@
 application:
-  title: ${APPLICATION_TITLE:VectoPath Referential API}
+  title: ${APPLICATION_TITLE:OpenDataJungle Referential API}
   version: ${APPLICATION_VERSION:@project.version@}
 
 spring:
   application:
-    name: VectoPath Referential API
+    name: OpenDataJungle Referential API
 
   security:
     oauth2:
@@ -14,7 +14,7 @@ spring:
 
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/vecto_path}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/open_data_jungle}
     username: ${DATABASE_USERNAME:user}
     password: ${DATABASE_PASSWORD:password}
     driver-class-name: ${DATABASE_DRIVER:org.postgresql.Driver}
@@ -52,7 +52,7 @@ spring.jackson:
 
 logging:
   level:
-    com.laulem.vectopath: ${LOGGING_LEVEL_VECTOPATH:INFO}
+    com.opendatajungle: ${LOGGING_LEVEL_OPENDATAJUNGLE:INFO}
     org.springframework.ai: ${LOGGING_LEVEL_SPRING_AI:INFO}
   pattern:
     console: "${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss} - %msg%n}"
