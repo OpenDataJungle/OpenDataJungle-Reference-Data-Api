@@ -1,15 +1,15 @@
-CREATE SCHEMA IF NOT EXISTS referential;
-SET search_path TO referential, public;
+CREATE SCHEMA IF NOT EXISTS reference_data;
+SET search_path TO reference_data, public;
 
-DROP TABLE IF EXISTS referential.group_users;
+DROP TABLE IF EXISTS reference_data.group_users;
 
-DROP TABLE IF EXISTS referential.permissions;
-DROP TABLE IF EXISTS referential.groups;
-DROP TABLE IF EXISTS referential.users;
+DROP TABLE IF EXISTS reference_data.permissions;
+DROP TABLE IF EXISTS reference_data.groups;
+DROP TABLE IF EXISTS reference_data.users;
 
 DROP INDEX IF EXISTS idx_group_users_group_id;
 
-CREATE TABLE referential.users (
+CREATE TABLE reference_data.users (
                        id UUID PRIMARY KEY,
                        first_name VARCHAR NOT NULL,
                        last_name VARCHAR NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE referential.users (
                        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE referential.groups (
+CREATE TABLE reference_data.groups (
                         id UUID PRIMARY KEY,
                         name VARCHAR NOT NULL UNIQUE,
                         description TEXT,
@@ -26,7 +26,7 @@ CREATE TABLE referential.groups (
                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE referential.permissions (
+CREATE TABLE reference_data.permissions (
                                          id UUID PRIMARY KEY,
                                          name VARCHAR NOT NULL UNIQUE,
                                          description TEXT,
@@ -35,26 +35,26 @@ CREATE TABLE referential.permissions (
                                          is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE referential.group_users (
-                             group_id UUID NOT NULL REFERENCES referential.groups(id) ON DELETE CASCADE,
-                             user_id UUID NOT NULL REFERENCES referential.users(id) ON DELETE CASCADE,
-                             permission_id UUID NOT NULL REFERENCES referential.permissions(id),
+CREATE TABLE reference_data.group_users (
+                             group_id UUID NOT NULL REFERENCES reference_data.groups(id) ON DELETE CASCADE,
+                             user_id UUID NOT NULL REFERENCES reference_data.users(id) ON DELETE CASCADE,
+                             permission_id UUID NOT NULL REFERENCES reference_data.permissions(id),
                              PRIMARY KEY (group_id, user_id)
 );
 
 
 -- Default user and group (default user : anonymous) and root group (default group : root)
-INSERT INTO referential.users (id, first_name, last_name, username)
+INSERT INTO reference_data.users (id, first_name, last_name, username)
 VALUES ('00000000-0000-0000-0000-000000000001', 'Anonymous', 'User', 'anonymous');
 
-INSERT INTO referential.groups (id, name, description)
+INSERT INTO reference_data.groups (id, name, description)
 VALUES ('00000000-0000-0000-0000-000000000001', 'root', 'Root group with all permissions');
 
 -- Permission
-INSERT INTO referential.permissions (id, name, description, can_read, can_write, is_admin)
+INSERT INTO reference_data.permissions (id, name, description, can_read, can_write, is_admin)
 VALUES ('00000000-0000-0000-0000-000000000001', 'root_permission', 'Root permission with all access rights', TRUE, TRUE, TRUE);
 
-INSERT INTO referential.group_users (group_id, user_id, permission_id)
+INSERT INTO reference_data.group_users (group_id, user_id, permission_id)
 VALUES ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001');
 
-CREATE INDEX idx_group_users_group_id ON referential.group_users(group_id);
+CREATE INDEX idx_group_users_group_id ON reference_data.group_users(group_id);

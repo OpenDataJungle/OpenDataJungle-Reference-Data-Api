@@ -1,5 +1,5 @@
 {
-  "name": "OpenDataJungle-Referential-Api",
+  "name": "OpenDataJungle-Reference-Data-Api",
   "build": {
     "dockerfile": "Dockerfile",
     "args": {
@@ -61,8 +61,8 @@
     "TESTCONTAINERS_RYUK_DISABLED": "true",
     "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal"
   },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/OpenDataJungle-Referential-Api,type=bind,consistency=delegated",
-  "workspaceFolder": "/OpenDataJungle-Referential-Api",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/OpenDataJungle-Reference-Data-Api,type=bind,consistency=delegated",
+  "workspaceFolder": "/OpenDataJungle-Reference-Data-Api",
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
   "waitFor": "postStartCommand"
 }

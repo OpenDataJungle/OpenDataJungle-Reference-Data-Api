@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.opendatajungle</groupId>
-    <artifactId>Referential-api</artifactId>
+    <artifactId>reference-data-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>OpenDataJungle Referential Api</name>
+    <name>OpenDataJungle Reference Data Api</name>
     <properties>
         <java.version>25</java.version>
         <archunit.version>1.4.1</archunit.version>
