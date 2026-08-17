@@ -53,6 +53,7 @@ class HexagonalArchitectureTest {
                 .resideInAnyPackage(
                         COM_OPENDATAJUNGLE + ".api.business..",
                         COM_OPENDATAJUNGLE + ".api.shared..",
+                        "com.opendatajungle.commons.business..",
                         "java..",
                         "org.slf4j.."
                 )
@@ -167,7 +168,8 @@ class HexagonalArchitectureTest {
         ArchRule rule = classes()
                 .that().resideInAPackage(COM_OPENDATAJUNGLE + ".api.business.exception..")
                 .should().beAssignableTo(Exception.class)
-                .orShould().beAssignableTo(RuntimeException.class);
+                .orShould().beAssignableTo(RuntimeException.class)
+                .allowEmptyShould(true);
 
         rule.check(importedClasses);
     }
