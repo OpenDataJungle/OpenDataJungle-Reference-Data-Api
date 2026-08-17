@@ -1,7 +1,7 @@
 package com.opendatajungle.reference.data.api.business.service;
 
-import com.opendatajungle.reference.data.api.business.exception.NotFoundException;
-import com.opendatajungle.reference.data.api.business.exception.ParamException;
+import com.opendatajungle.commons.business.exception.NotFoundException;
+import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Permission;
 import com.opendatajungle.reference.data.api.business.repository.PermissionRepository;
 import com.opendatajungle.reference.data.api.shared.PageResult;

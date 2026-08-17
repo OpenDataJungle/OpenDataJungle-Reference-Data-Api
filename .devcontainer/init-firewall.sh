@@ -81,6 +81,7 @@ for domain in \
     "update.code.visualstudio.com" \
     "repo.maven.apache.org" \
     "repo1.maven.org" \
+    "central.sonatype.com" \
     "plugins.gradle.org" \
     "services.gradle.org" \
     "nodejs.org" \
@@ -93,6 +94,7 @@ for domain in \
     "objects.githubusercontent.com" \
     "raw.githubusercontent.com" \
     "codeload.github.com" \
+    "mcp.context7.com" \
     "laulem.com"; do
     echo "Resolving $domain..."
     ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')

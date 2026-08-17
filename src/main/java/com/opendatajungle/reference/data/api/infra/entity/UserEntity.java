@@ -1,6 +1,6 @@
 package com.opendatajungle.reference.data.api.infra.entity;
 
-import com.opendatajungle.reference.data.api.shared.util.DateUtils;
+import com.opendatajungle.commons.util.DateUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
