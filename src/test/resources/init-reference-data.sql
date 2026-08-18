@@ -32,13 +32,16 @@ CREATE TABLE reference_data.permissions (
                                          description TEXT,
                                          can_read BOOLEAN NOT NULL DEFAULT FALSE,
                                          can_write BOOLEAN NOT NULL DEFAULT FALSE,
-                                         is_admin BOOLEAN NOT NULL DEFAULT FALSE
+                                         is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+                                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE reference_data.group_users (
                              group_id UUID NOT NULL REFERENCES reference_data.groups(id) ON DELETE CASCADE,
                              user_id UUID NOT NULL REFERENCES reference_data.users(id) ON DELETE CASCADE,
                              permission_id UUID NOT NULL REFERENCES reference_data.permissions(id),
+                             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                              PRIMARY KEY (group_id, user_id)
 );
 

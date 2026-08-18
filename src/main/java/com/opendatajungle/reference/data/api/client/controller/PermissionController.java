@@ -9,6 +9,7 @@ import com.opendatajungle.reference.data.api.client.mapper.PaginatedResponseMapp
 import com.opendatajungle.reference.data.api.client.security.SecurityExpressions;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,7 +41,7 @@ public class PermissionController {
     @GetMapping
     public PaginatedResponse<PermissionResponse> getAllPermissions(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "50") @Min(1) int size) {
+            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
         PageResult<Permission> businessResponse = permissionUseCase.findAll(page, size);
         return PaginatedResponseMapper.toPaginatedResponse(businessResponse, PermissionResponse::fromBusiness);
     }
