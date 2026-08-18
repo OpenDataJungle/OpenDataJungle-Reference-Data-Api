@@ -9,6 +9,7 @@ import com.opendatajungle.reference.data.api.client.mapper.PaginatedResponseMapp
 import com.opendatajungle.reference.data.api.client.security.SecurityExpressions;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,7 @@ public class GroupController {
     public PaginatedResponse<GroupResponse> getAllGroups(
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "50") @Min(1) int size) {
+            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
         PageResult<Group> businessResponse = groupUseCase.findAll(page, size, name);
         return PaginatedResponseMapper.toPaginatedResponse(businessResponse, GroupResponse::fromBusiness);
     }

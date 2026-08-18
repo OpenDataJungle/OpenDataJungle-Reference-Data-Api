@@ -43,9 +43,6 @@ public class GroupUserService implements GroupUserUseCase {
     @Override
     public PageResult<GroupUser> getUsersByGroupId(UUID groupId, int page, int size) {
         Group group = groupRepository.findById(groupId).orElseThrow(() -> new NotFoundException(GROUP, groupId.toString()));
-        if (!groupRepository.existsById(groupId)) {
-            throw new NotFoundException(GROUP, groupId.toString());
-        }
         return groupUserRepository.findUsersByGroupId(group, page, size);
     }
 

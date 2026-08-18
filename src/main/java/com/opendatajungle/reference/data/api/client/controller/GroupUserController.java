@@ -7,6 +7,7 @@ import com.opendatajungle.reference.data.api.client.dto.PaginatedResponse;
 import com.opendatajungle.reference.data.api.client.mapper.PaginatedResponseMapper;
 import com.opendatajungle.reference.data.api.client.security.SecurityExpressions;
 import com.opendatajungle.reference.data.api.shared.PageResult;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class GroupUserController {
     public PaginatedResponse<GroupUserResponse> getGroupsByUserId(
             @PathVariable UUID userId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "50") @Min(1) int size) {
+            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
         PageResult<GroupUser> businessResponse = groupUserUseCase.getGroupsByUserId(userId, page, size);
         return PaginatedResponseMapper.toPaginatedResponse(businessResponse, GroupUserResponse::fromBusiness);
     }
@@ -46,7 +47,7 @@ public class GroupUserController {
     public PaginatedResponse<GroupUserResponse> getUsersByGroupId(
             @PathVariable UUID groupId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "50") @Min(1) int size) {
+            @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
         PageResult<GroupUser> businessResponse = groupUserUseCase.getUsersByGroupId(groupId, page, size);
         return PaginatedResponseMapper.toPaginatedResponse(businessResponse, GroupUserResponse::fromBusiness);
     }
@@ -61,7 +62,7 @@ public class GroupUserController {
         groupUserUseCase.addUserToGroup(groupId, userId, permissionId);
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_WRITE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_DELETE)
     @DeleteMapping("/groups/{groupId}/users/{userId}")
     public void removeUserFromGroup(
             @PathVariable UUID groupId,
