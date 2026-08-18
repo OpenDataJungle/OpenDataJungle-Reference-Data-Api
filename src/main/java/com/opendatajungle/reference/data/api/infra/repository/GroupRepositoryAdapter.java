@@ -1,5 +1,8 @@
 package com.opendatajungle.reference.data.api.infra.repository;
 
+import com.opendatajungle.commons.business.exception.NotFoundException;
+import com.opendatajungle.commons.business.exception.ParamException;
+import com.opendatajungle.commons.util.StringUtils;
 import com.opendatajungle.reference.data.api.business.model.Group;
 import com.opendatajungle.reference.data.api.business.repository.GroupRepository;
 import com.opendatajungle.reference.data.api.infra.entity.GroupEntity;
@@ -31,7 +34,7 @@ public class GroupRepositoryAdapter implements GroupRepository {
 
     private PageResult<Group> findAllByCriteria(int page, int size, String name) {
         Specification<GroupEntity> spec = (root, _, cb) -> {
-            if (name != null && !name.isBlank()) {
+            if (!StringUtils.isNullOrBlank(name)) {
                 return cb.equal(root.get("name"), name);
             }
             return null;
@@ -62,7 +65,7 @@ public class GroupRepositoryAdapter implements GroupRepository {
     public Group save(Group group) {
         GroupEntity entity;
         if (group.id() != null) {
-            entity = groupJpaRepository.findById(group.id()).orElseThrow();
+            entity = groupJpaRepository.findById(group.id()).orElseThrow(() -> new NotFoundException("Group", group.id().toString()));
             entity.setName(group.name());
             entity.setDescription(group.description());
         } else {

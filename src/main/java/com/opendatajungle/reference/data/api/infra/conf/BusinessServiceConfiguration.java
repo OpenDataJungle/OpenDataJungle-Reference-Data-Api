@@ -1,10 +1,10 @@
 package com.opendatajungle.reference.data.api.infra.conf;
 
+import com.opendatajungle.commons.business.service.AuthenticationUseCase;
 import com.opendatajungle.reference.data.api.business.repository.GroupRepository;
 import com.opendatajungle.reference.data.api.business.repository.GroupUserRepository;
 import com.opendatajungle.reference.data.api.business.repository.PermissionRepository;
 import com.opendatajungle.reference.data.api.business.repository.UserRepository;
-import com.opendatajungle.reference.data.api.business.service.AuthenticationUseCase;
 import com.opendatajungle.reference.data.api.business.service.GroupService;
 import com.opendatajungle.reference.data.api.business.service.GroupUseCase;
 import com.opendatajungle.reference.data.api.business.service.GroupUserService;

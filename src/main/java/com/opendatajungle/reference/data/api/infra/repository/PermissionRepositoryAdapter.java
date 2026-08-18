@@ -1,5 +1,6 @@
 package com.opendatajungle.reference.data.api.infra.repository;
 
+import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.reference.data.api.business.model.Permission;
 import com.opendatajungle.reference.data.api.business.repository.PermissionRepository;
 import com.opendatajungle.reference.data.api.infra.entity.PermissionEntity;
@@ -50,7 +51,7 @@ public class PermissionRepositoryAdapter implements PermissionRepository {
     public Permission save(Permission permission) {
         PermissionEntity entity;
         if (permission.id() != null) {
-            entity = permissionJpaRepository.findById(permission.id()).orElseThrow();
+            entity = permissionJpaRepository.findById(permission.id()).orElseThrow(() -> new NotFoundException("Permission", permission.id().toString()));
             entity.setName(permission.name());
             entity.setDescription(permission.description());
             entity.setCanRead(permission.canRead());

@@ -1,5 +1,7 @@
 package com.opendatajungle.reference.data.api.infra.repository;
 
+import com.opendatajungle.commons.business.exception.NotFoundException;
+import com.opendatajungle.commons.util.StringUtils;
 import com.opendatajungle.reference.data.api.business.model.User;
 import com.opendatajungle.reference.data.api.business.repository.UserRepository;
 import com.opendatajungle.reference.data.api.infra.entity.UserEntity;
@@ -31,7 +33,7 @@ public class UserRepositoryAdapter implements UserRepository {
 
     private PageResult<User> findAllByCriteria(int page, int size, String username) {
         Specification<UserEntity> spec = (root, _, cb) -> {
-            if (username != null && !username.isBlank()) {
+            if (!StringUtils.isNullOrBlank(username)) {
                 return cb.equal(root.get("username"), username);
             }
             return null;
@@ -62,7 +64,7 @@ public class UserRepositoryAdapter implements UserRepository {
     public User save(User user) {
         UserEntity entity;
         if (user.id() != null) {
-            entity = userJpaRepository.findById(user.id()).orElseThrow();
+            entity = userJpaRepository.findById(user.id()).orElseThrow(() -> new NotFoundException("User", user.id().toString()));
             entity.setFirstName(user.firstName());
             entity.setLastName(user.lastName());
             entity.setUsername(user.username());
