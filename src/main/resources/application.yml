@@ -6,13 +6,6 @@ spring:
   application:
     name: OpenDataJungle ReferenceData API
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8090/realms/master}
-          audiences: ${JWT_AUDIENCES:account}
-
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/open_data_jungle}
     username: ${DATABASE_USERNAME:user}

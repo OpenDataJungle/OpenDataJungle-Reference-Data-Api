@@ -278,6 +278,7 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 50,
+            "maximum" : 100,
             "minimum" : 1
           }
         } ],
@@ -361,6 +362,7 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 50,
+            "maximum" : 100,
             "minimum" : 1
           }
         } ],
