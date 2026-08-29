@@ -3,7 +3,8 @@ package com.opendatajungle.reference.data.api.client.dto;
 import com.opendatajungle.reference.data.api.business.model.User;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,8 +15,8 @@ class UserResponseTest {
     void fromBusiness_shouldMapAllFields_whenCalled() {
         // Given
         UUID id = UUID.randomUUID();
-        LocalDateTime createdAt = LocalDateTime.now();
-        LocalDateTime updatedAt = createdAt.plusDays(1);
+        Instant createdAt = Instant.now();
+        Instant updatedAt = createdAt.plus(Duration.ofDays(1));
         User user = User.builder()
                 .id(id)
                 .firstName("Ada")

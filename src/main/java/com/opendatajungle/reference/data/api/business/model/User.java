@@ -1,6 +1,6 @@
 package com.opendatajungle.reference.data.api.business.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record User(
@@ -8,8 +8,8 @@ public record User(
         String firstName,
         String lastName,
         String username,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        Instant createdAt,
+        Instant updatedAt
 ) {
     public static UserBuilder builder() {
         return new UserBuilder();
@@ -20,8 +20,8 @@ public record User(
         private String firstName;
         private String lastName;
         private String username;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
+        private Instant createdAt;
+        private Instant updatedAt;
 
         private UserBuilder() {
         }
@@ -46,12 +46,12 @@ public record User(
             return this;
         }
 
-        public UserBuilder createdAt(LocalDateTime createdAt) {
+        public UserBuilder createdAt(Instant createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
-        public UserBuilder updatedAt(LocalDateTime updatedAt) {
+        public UserBuilder updatedAt(Instant updatedAt) {
             this.updatedAt = updatedAt;
             return this;
         }

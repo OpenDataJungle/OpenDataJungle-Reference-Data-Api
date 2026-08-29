@@ -1,14 +1,14 @@
 package com.opendatajungle.reference.data.api.business.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record Group(
         UUID id,
         String name,
         String description,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        Instant createdAt,
+        Instant updatedAt
 ) {
     public static GroupBuilder builder() {
         return new GroupBuilder();
@@ -18,8 +18,8 @@ public record Group(
         private UUID id;
         private String name;
         private String description;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
+        private Instant createdAt;
+        private Instant updatedAt;
 
         private GroupBuilder() {
         }
@@ -39,12 +39,12 @@ public record Group(
             return this;
         }
 
-        public GroupBuilder createdAt(LocalDateTime createdAt) {
+        public GroupBuilder createdAt(Instant createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
-        public GroupBuilder updatedAt(LocalDateTime updatedAt) {
+        public GroupBuilder updatedAt(Instant updatedAt) {
             this.updatedAt = updatedAt;
             return this;
         }

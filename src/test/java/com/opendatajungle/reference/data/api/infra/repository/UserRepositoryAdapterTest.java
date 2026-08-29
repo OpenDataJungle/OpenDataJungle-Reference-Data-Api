@@ -17,7 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -62,8 +63,8 @@ class UserRepositoryAdapterTest {
     void findById_shouldReturnMappedUser_whenEntityExists() {
         // Given
         UUID id = UUID.randomUUID();
-        LocalDateTime createdAt = LocalDateTime.now();
-        LocalDateTime updatedAt = createdAt.plusDays(1);
+        Instant createdAt = Instant.now();
+        Instant updatedAt = createdAt.plus(Duration.ofDays(1));
         UserEntity entity = UserEntity
                 .builder()
                 .id(id)

@@ -17,7 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -43,7 +44,7 @@ class GroupRepositoryAdapterTest {
     void findAll_shouldUseZeroBasedPageAndAscendingNameSort_whenCalled() {
         // Given
         GroupEntity entity = GroupEntity.builder().id(UUID.randomUUID()).name("root").description("Root group")
-                .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+                .createdAt(Instant.now()).updatedAt(Instant.now()).build();
         Pageable pageable = PageRequest.of(0, 50, Sort.by("name").ascending());
         Page<GroupEntity> page = new PageImpl<>(List.of(entity), pageable, 1);
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
@@ -64,8 +65,8 @@ class GroupRepositoryAdapterTest {
     void findById_shouldReturnMappedGroup_whenEntityExists() {
         // Given
         UUID id = UUID.randomUUID();
-        LocalDateTime createdAt = LocalDateTime.now();
-        LocalDateTime updatedAt = createdAt.plusDays(1);
+        Instant createdAt = Instant.now();
+        Instant updatedAt = createdAt.plus(Duration.ofDays(1));
 
         GroupEntity entity = GroupEntity.builder()
                 .id(id)
@@ -122,7 +123,7 @@ class GroupRepositoryAdapterTest {
     void save_shouldUpdateOnlyMutableFields_whenGroupIdExists() {
         // Given
         UUID id = UUID.randomUUID();
-        LocalDateTime originalCreatedAt = LocalDateTime.now().minusDays(1);
+        Instant originalCreatedAt = Instant.now().minus(Duration.ofDays(1));
         GroupEntity existing = GroupEntity.builder().id(id).name("old").description("old description").createdAt(originalCreatedAt).build();
         Group group = Group.builder().id(id).name("updated").description("updated description").build();
         when(groupJpaRepository.findById(id)).thenReturn(Optional.of(existing));
