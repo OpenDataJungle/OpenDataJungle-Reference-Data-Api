@@ -14,7 +14,7 @@
     <name>OpenDataJungle Reference Data Api</name>
     <properties>
         <java.version>25</java.version>
-        <archunit.version>1.4.1</archunit.version>
+        <archunit.version>1.5.0</archunit.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
     </properties>
