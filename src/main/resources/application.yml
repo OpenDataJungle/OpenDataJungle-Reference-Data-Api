@@ -3,6 +3,9 @@ application:
   version: ${APPLICATION_VERSION:@project.version@}
 
 spring:
+  config:
+    import: classpath:application-opendatajungle-commons.yml
+
   application:
     name: OpenDataJungle ReferenceData API
 
