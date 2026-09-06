@@ -52,7 +52,7 @@ public class PermissionController {
         return PermissionResponse.fromBusiness(permissionUseCase.getById(id));
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_WRITE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ADMIN)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public PermissionResponse createPermission(@Valid @RequestBody PermissionRequest permissionRequest) {
@@ -60,7 +60,7 @@ public class PermissionController {
         return PermissionResponse.fromBusiness(createdPermission);
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_WRITE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ADMIN)
     @PutMapping("/{id}")
     public PermissionResponse updatePermission(
             @PathVariable UUID id,
@@ -69,7 +69,7 @@ public class PermissionController {
         return PermissionResponse.fromBusiness(updatedPermission);
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_DELETE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ADMIN)
     @DeleteMapping("/{id}")
     public void deletePermission(@PathVariable UUID id) {
         permissionUseCase.delete(id);

@@ -33,6 +33,11 @@ public class UserService implements UserUseCase {
     }
 
     @Override
+    public boolean existsById(UUID id) {
+        return userRepository.existsById(id);
+    }
+
+    @Override
     public User create(User user) {
         if (userRepository.existsByUsername(user.username())) {
             throw new ParamException(

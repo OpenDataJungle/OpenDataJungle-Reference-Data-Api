@@ -11,6 +11,8 @@ public interface PermissionRepository {
 
     Optional<Permission> findById(UUID id);
 
+    Optional<Permission> findByName(String name);
+
     Permission save(Permission permission);
 
     boolean existsById(UUID id);

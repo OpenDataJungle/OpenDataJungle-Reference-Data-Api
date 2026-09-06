@@ -17,4 +17,6 @@ public interface GroupUserRepository {
     void removeUserFromGroup(UUID groupId, UUID userId);
 
     boolean isUserInGroup(UUID groupId, UUID userId);
+
+    boolean isUserAdminOfGroup(UUID groupId, UUID userId);
 }

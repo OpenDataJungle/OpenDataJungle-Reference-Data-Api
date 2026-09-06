@@ -10,6 +10,13 @@ public interface PermissionUseCase {
 
     Permission getById(UUID id);
 
+    boolean existsById(UUID id);
+
+    /**
+     * Returns the well-known permission (seeded in SQL as "DEFAULT_ADMIN_PERMISSION").
+     */
+    Permission getDefaultAdminPermission();
+
     Permission create(Permission permission);
 
     Permission update(UUID id, Permission permission);

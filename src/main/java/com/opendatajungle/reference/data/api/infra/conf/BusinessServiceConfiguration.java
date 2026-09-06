@@ -30,15 +30,17 @@ public class BusinessServiceConfiguration {
     }
 
     @Bean
-    public GroupUseCase groupService(GroupRepository groupRepository) {
-        return new GroupService(groupRepository);
+    public GroupUseCase groupService(GroupRepository groupRepository,
+                                     GroupUserUseCase groupUserUseCase,
+                                     UserUseCase userUseCase) {
+        return new GroupService(groupRepository, groupUserUseCase, userUseCase);
     }
 
     @Bean
     public GroupUserUseCase groupUserService(GroupUserRepository groupUserRepository,
-                                             UserRepository userRepository,
                                              GroupRepository groupRepository,
-                                             PermissionRepository permissionRepository) {
-        return new GroupUserService(groupUserRepository, userRepository, groupRepository, permissionRepository);
+                                             UserUseCase userUseCase,
+                                             PermissionUseCase permissionUseCase) {
+        return new GroupUserService(groupUserRepository, groupRepository, userUseCase, permissionUseCase);
     }
 }

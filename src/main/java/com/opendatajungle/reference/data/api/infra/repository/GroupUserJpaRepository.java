@@ -20,6 +20,9 @@ public interface GroupUserJpaRepository extends JpaRepository<GroupUserEntity, G
     @Query("SELECT CASE WHEN COUNT(gu) > 0 THEN true ELSE false END FROM GroupUserEntity gu WHERE gu.groupId = :groupId AND gu.userId = :userId")
     boolean isUserInGroup(@Param("groupId") UUID groupId, @Param("userId") UUID userId);
 
+    @Query("SELECT CASE WHEN COUNT(gu) > 0 THEN true ELSE false END FROM GroupUserEntity gu " +
+            "JOIN gu.permission p WHERE gu.groupId = :groupId AND gu.userId = :userId AND p.isAdmin = true")
+    boolean isUserAdminOfGroup(@Param("groupId") UUID groupId, @Param("userId") UUID userId);
 
     @Modifying
     @Query(value = "DELETE FROM reference_data.group_users WHERE group_id = :groupId AND user_id = :userId", nativeQuery = true)

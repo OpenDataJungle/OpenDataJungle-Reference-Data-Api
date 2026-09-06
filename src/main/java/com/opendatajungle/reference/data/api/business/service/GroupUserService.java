@@ -1,42 +1,42 @@
 package com.opendatajungle.reference.data.api.business.service;
 
+import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Group;
 import com.opendatajungle.reference.data.api.business.model.GroupUser;
+import com.opendatajungle.reference.data.api.business.model.Permission;
 import com.opendatajungle.reference.data.api.business.model.User;
 import com.opendatajungle.reference.data.api.business.repository.GroupRepository;
 import com.opendatajungle.reference.data.api.business.repository.GroupUserRepository;
-import com.opendatajungle.reference.data.api.business.repository.PermissionRepository;
-import com.opendatajungle.reference.data.api.business.repository.UserRepository;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 
 import java.util.UUID;
 
 public class GroupUserService implements GroupUserUseCase {
 
-    private static final String USER = "User";
     private static final String GROUP = "Group";
+    private static final String USER = "User";
     private static final String PERMISSION = "Permission";
 
     private final GroupUserRepository groupUserRepository;
-    private final UserRepository userRepository;
     private final GroupRepository groupRepository;
-    private final PermissionRepository permissionRepository;
+    private final UserUseCase userUseCase;
+    private final PermissionUseCase permissionUseCase;
 
     public GroupUserService(GroupUserRepository groupUserRepository,
-                            UserRepository userRepository,
                             GroupRepository groupRepository,
-                            PermissionRepository permissionRepository) {
+                            UserUseCase userUseCase,
+                            PermissionUseCase permissionUseCase) {
         this.groupUserRepository = groupUserRepository;
-        this.userRepository = userRepository;
         this.groupRepository = groupRepository;
-        this.permissionRepository = permissionRepository;
+        this.userUseCase = userUseCase;
+        this.permissionUseCase = permissionUseCase;
     }
 
     @Override
     public PageResult<GroupUser> getGroupsByUserId(UUID userId, int page, int size) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER, userId.toString()));
+        User user = userUseCase.getById(userId);
         return groupUserRepository.findGroupsByUserId(user, page, size);
     }
 
@@ -51,12 +51,13 @@ public class GroupUserService implements GroupUserUseCase {
         if (!groupRepository.existsById(groupId)) {
             throw new NotFoundException(GROUP, groupId.toString());
         }
-        if (!userRepository.existsById(userId)) {
+        if (!userUseCase.existsById(userId)) {
             throw new NotFoundException(USER, userId.toString());
         }
-        if (!permissionRepository.existsById(permissionId)) {
+        if (!permissionUseCase.existsById(permissionId)) {
             throw new NotFoundException(PERMISSION, permissionId.toString());
         }
+        requireGroupAdmin(groupId, userUseCase.getOrCreateCurrentUser().id());
         if (groupUserRepository.isUserInGroup(groupId, userId)) {
             throw new ParamException(
                     "USER_ALREADY_IN_GROUP",
@@ -72,9 +73,10 @@ public class GroupUserService implements GroupUserUseCase {
         if (!groupRepository.existsById(groupId)) {
             throw new NotFoundException(GROUP, groupId.toString());
         }
-        if (!userRepository.existsById(userId)) {
+        if (!userUseCase.existsById(userId)) {
             throw new NotFoundException(USER, userId.toString());
         }
+        requireGroupAdmin(groupId, userUseCase.getOrCreateCurrentUser().id());
         if (!groupUserRepository.isUserInGroup(groupId, userId)) {
             throw new ParamException(
                     "USER_NOT_IN_GROUP",
@@ -83,5 +85,28 @@ public class GroupUserService implements GroupUserUseCase {
             );
         }
         groupUserRepository.removeUserFromGroup(groupId, userId);
+    }
+
+    @Override
+    public void requireGroupAdmin(UUID groupId, UUID userId) {
+        if (!hasGroupAdmin(groupId, userId)) {
+            throw new AccessDeniedException("Only an admin of group " + groupId + " can perform this action");
+        }
+    }
+
+    @Override
+    public boolean hasGroupAdmin(UUID groupId, UUID userId) {
+        return groupUserRepository.isUserAdminOfGroup(groupId, userId);
+    }
+
+    @Override
+    public void grantGroupAdmin(UUID groupId, UUID userId) {
+        Permission defaultAdminPermission = permissionUseCase.getDefaultAdminPermission();
+        groupUserRepository.addUserToGroup(groupId, userId, defaultAdminPermission.id());
+    }
+
+    @Override
+    public void grantGroupAdminForCurrentUser(UUID groupId) {
+        grantGroupAdmin(groupId, userUseCase.getOrCreateCurrentUser().id());
     }
 }

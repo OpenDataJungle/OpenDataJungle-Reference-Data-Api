@@ -10,6 +10,8 @@ public interface UserUseCase {
 
     User getById(UUID id);
 
+    boolean existsById(UUID id);
+
     User create(User user);
 
     User update(UUID id, User user);

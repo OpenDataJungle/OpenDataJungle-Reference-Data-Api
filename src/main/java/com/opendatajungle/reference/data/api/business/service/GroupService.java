@@ -1,5 +1,6 @@
 package com.opendatajungle.reference.data.api.business.service;
 
+import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Group;
@@ -13,9 +14,15 @@ public class GroupService implements GroupUseCase {
     private static final String GROUP = "Group";
 
     private final GroupRepository groupRepository;
+    private final GroupUserUseCase groupUserUseCase;
+    private final UserUseCase userUseCase;
 
-    public GroupService(GroupRepository groupRepository) {
+    public GroupService(GroupRepository groupRepository,
+                        GroupUserUseCase groupUserUseCase,
+                        UserUseCase userUseCase) {
         this.groupRepository = groupRepository;
+        this.groupUserUseCase = groupUserUseCase;
+        this.userUseCase = userUseCase;
     }
 
     @Override
@@ -38,7 +45,11 @@ public class GroupService implements GroupUseCase {
                     "name"
             );
         }
-        return groupRepository.save(group);
+        Group created = groupRepository.save(group);
+
+        groupUserUseCase.grantGroupAdminForCurrentUser(created.id());
+
+        return created;
     }
 
     @Override
@@ -46,6 +57,8 @@ public class GroupService implements GroupUseCase {
         if (!groupRepository.existsById(id)) {
             throw new NotFoundException(GROUP, id.toString());
         }
+        groupUserUseCase.requireGroupAdmin(id, userUseCase.getOrCreateCurrentUser().id());
+
         if (groupRepository.existsByNameAndIdNot(group.name(), id)) {
             throw new ParamException(
                     "GROUP_NAME_ALREADY_EXISTS",
@@ -66,6 +79,7 @@ public class GroupService implements GroupUseCase {
         if (!groupRepository.existsById(id)) {
             throw new NotFoundException(GROUP, id.toString());
         }
+        groupUserUseCase.requireGroupAdmin(id, userUseCase.getOrCreateCurrentUser().id());
         groupRepository.deleteById(id);
     }
 }

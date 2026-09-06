@@ -11,6 +11,7 @@ import java.util.UUID;
 public class PermissionService implements PermissionUseCase {
 
     private static final String PERMISSION = "Permission";
+    private static final String DEFAULT_ADMIN_PERMISSION = "DEFAULT_ADMIN_PERMISSION";
 
     private final PermissionRepository permissionRepository;
 
@@ -27,6 +28,17 @@ public class PermissionService implements PermissionUseCase {
     public Permission getById(UUID id) {
         return permissionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(PERMISSION, id.toString()));
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return permissionRepository.existsById(id);
+    }
+
+    @Override
+    public Permission getDefaultAdminPermission() {
+        return permissionRepository.findByName(DEFAULT_ADMIN_PERMISSION)
+                .orElseThrow(() -> new NotFoundException(PERMISSION, DEFAULT_ADMIN_PERMISSION));
     }
 
     @Override

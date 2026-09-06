@@ -89,6 +89,12 @@ public class GroupUserRepositoryAdapter implements GroupUserRepository {
         return groupUserJpaRepository.isUserInGroup(groupId, userId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isUserAdminOfGroup(UUID groupId, UUID userId) {
+        return groupUserJpaRepository.isUserAdminOfGroup(groupId, userId);
+    }
+
     private GroupUser toGroupUserBusinessModel(GroupUserEntity entity, User user) {
         return GroupUser.builder()
                 .user(user)

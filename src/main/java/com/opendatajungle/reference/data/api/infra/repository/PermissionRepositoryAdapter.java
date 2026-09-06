@@ -47,6 +47,12 @@ public class PermissionRepositoryAdapter implements PermissionRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Permission> findByName(String name) {
+        return permissionJpaRepository.findByName(name).map(this::toBusinessModel);
+    }
+
+    @Override
     @Transactional
     public Permission save(Permission permission) {
         PermissionEntity entity;
