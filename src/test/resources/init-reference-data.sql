@@ -57,6 +57,10 @@ VALUES ('00000000-0000-0000-0000-000000000001', 'root', 'Root group with all per
 INSERT INTO reference_data.permissions (id, name, description, can_read, can_write, is_admin)
 VALUES ('00000000-0000-0000-0000-000000000001', 'root_permission', 'Root permission with all access rights', TRUE, TRUE, TRUE);
 
+-- Default permission granted to the creator of a new group
+INSERT INTO reference_data.permissions (id, name, description, can_read, can_write, is_admin)
+VALUES ('00000000-0000-0000-0000-000000000002', 'DEFAULT_ADMIN_PERMISSION', 'Default admin permission granted to a group creator', TRUE, TRUE, TRUE);
+
 INSERT INTO reference_data.group_users (group_id, user_id, permission_id)
 VALUES ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001');
 

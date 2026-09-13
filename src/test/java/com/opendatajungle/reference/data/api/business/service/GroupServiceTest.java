@@ -1,8 +1,10 @@
 package com.opendatajungle.reference.data.api.business.service;
 
+import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Group;
+import com.opendatajungle.reference.data.api.business.model.User;
 import com.opendatajungle.reference.data.api.business.repository.GroupRepository;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 import org.junit.jupiter.api.Test;
@@ -19,17 +21,22 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// TODO: Only Group Admin should update / delete group.
-// TODO: Creation group should add Admin rôle to the creator
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
 
     @Mock
     private GroupRepository groupRepository;
+
+    @Mock
+    private GroupUserUseCase groupUserUseCase;
+
+    @Mock
+    private UserUseCase userUseCase;
 
     @InjectMocks
     private GroupService groupService;
@@ -80,10 +87,11 @@ class GroupServiceTest {
     }
 
     @Test
-    void create_shouldSaveGroup_whenNameNotAlreadyExists() {
+    void create_shouldSaveGroupAndGrantAdminToCreator_whenNameNotAlreadyExists() {
         // Given
+        UUID groupId = UUID.randomUUID();
         Group group = Group.builder().name("root").description("Root group").build();
-        Group saved = Group.builder().id(UUID.randomUUID()).name("root").description("Root group").build();
+        Group saved = Group.builder().id(groupId).name("root").description("Root group").build();
         when(groupRepository.existsByName("root")).thenReturn(false);
         when(groupRepository.save(group)).thenReturn(saved);
 
@@ -92,6 +100,7 @@ class GroupServiceTest {
 
         // Then
         assertThat(result).isSameAs(saved);
+        verify(groupUserUseCase).grantGroupAdminForCurrentUser(groupId);
     }
 
     @Test
@@ -109,14 +118,18 @@ class GroupServiceTest {
                     assertThat(paramException.getField()).isEqualTo("name");
                 });
         verify(groupRepository, never()).save(any());
+        verify(groupUserUseCase, never()).grantGroupAdminForCurrentUser(any());
     }
 
     @Test
     void update_shouldSaveGroup_whenIdExistsAndNameFree() {
         // Given
         UUID id = UUID.randomUUID();
+        UUID currentUserId = UUID.randomUUID();
         Group group = Group.builder().name("updated").description("Updated description").build();
+        User currentUser = User.builder().id(currentUserId).username("alex").build();
         when(groupRepository.existsById(id)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(currentUser);
         when(groupRepository.existsByNameAndIdNot("updated", id)).thenReturn(false);
         ArgumentCaptor<Group> captor = ArgumentCaptor.forClass(Group.class);
         when(groupRepository.save(any())).thenReturn(group);
@@ -125,6 +138,7 @@ class GroupServiceTest {
         Group result = groupService.update(id, group);
 
         // Then
+        verify(groupUserUseCase).requireGroupAdmin(id, currentUserId);
         verify(groupRepository).save(captor.capture());
         Group toUpdate = captor.getValue();
         assertThat(toUpdate.id()).isEqualTo(id);
@@ -150,11 +164,31 @@ class GroupServiceTest {
     }
 
     @Test
+    void update_shouldThrowAccessDeniedException_whenCallerIsNotGroupAdmin() {
+        // Given
+        UUID id = UUID.randomUUID();
+        UUID currentUserId = UUID.randomUUID();
+        Group group = Group.builder().name("updated").build();
+        User currentUser = User.builder().id(currentUserId).username("alex").build();
+        when(groupRepository.existsById(id)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(currentUser);
+        doThrow(new AccessDeniedException("not admin")).when(groupUserUseCase).requireGroupAdmin(id, currentUserId);
+
+        // When & Then
+        assertThatThrownBy(() -> groupService.update(id, group))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(groupRepository, never()).save(any());
+    }
+
+    @Test
     void update_shouldThrowParamException_whenNameTakenByAnotherGroup() {
         // Given
         UUID id = UUID.randomUUID();
+        UUID currentUserId = UUID.randomUUID();
         Group group = Group.builder().name("duplicate").build();
+        User currentUser = User.builder().id(currentUserId).username("alex").build();
         when(groupRepository.existsById(id)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(currentUser);
         when(groupRepository.existsByNameAndIdNot("duplicate", id)).thenReturn(true);
 
         // When & Then
@@ -172,12 +206,16 @@ class GroupServiceTest {
     void delete_shouldDeleteGroup_whenGroupExists() {
         // Given
         UUID id = UUID.randomUUID();
+        UUID currentUserId = UUID.randomUUID();
+        User currentUser = User.builder().id(currentUserId).username("alex").build();
         when(groupRepository.existsById(id)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(currentUser);
 
         // When
         groupService.delete(id);
 
         // Then
+        verify(groupUserUseCase).requireGroupAdmin(id, currentUserId);
         verify(groupRepository).deleteById(id);
     }
 
@@ -191,6 +229,22 @@ class GroupServiceTest {
         assertThatThrownBy(() -> groupService.delete(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Group not found with id: " + id);
+        verify(groupRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void delete_shouldThrowAccessDeniedException_whenCallerIsNotGroupAdmin() {
+        // Given
+        UUID id = UUID.randomUUID();
+        UUID currentUserId = UUID.randomUUID();
+        User currentUser = User.builder().id(currentUserId).username("alex").build();
+        when(groupRepository.existsById(id)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(currentUser);
+        doThrow(new AccessDeniedException("not admin")).when(groupUserUseCase).requireGroupAdmin(id, currentUserId);
+
+        // When & Then
+        assertThatThrownBy(() -> groupService.delete(id))
+                .isInstanceOf(AccessDeniedException.class);
         verify(groupRepository, never()).deleteById(any());
     }
 }

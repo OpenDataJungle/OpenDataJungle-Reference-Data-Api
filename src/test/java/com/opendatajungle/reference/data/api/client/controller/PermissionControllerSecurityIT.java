@@ -39,6 +39,7 @@ class PermissionControllerSecurityIT {
     private static final String READ_SCOPE = "referencedata.read";
     private static final String WRITE_SCOPE = "referencedata.write";
     private static final String DELETE_SCOPE = "referencedata.delete";
+    private static final String ADMIN_SCOPE = "referencedata.admin";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -110,7 +111,7 @@ class PermissionControllerSecurityIT {
     }
 
     @Test
-    void createPermission_shouldReturn403_whenMissingWriteScope() throws Exception {
+    void createPermission_shouldReturn403_whenMissingAdminScope() throws Exception {
         mockMvc.perform(withScopes(post(PERMISSIONS_PATH), READ_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(samplePermission("read_only"))))
@@ -118,8 +119,16 @@ class PermissionControllerSecurityIT {
     }
 
     @Test
-    void createPermission_shouldReturn201_whenWriteScopePresent() throws Exception {
+    void createPermission_shouldReturn403_whenOnlyWriteScopePresent() throws Exception {
         mockMvc.perform(withScopes(post(PERMISSIONS_PATH), WRITE_SCOPE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(samplePermission("read_only"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createPermission_shouldReturn201_whenAdminScopePresent() throws Exception {
+        mockMvc.perform(withScopes(post(PERMISSIONS_PATH), ADMIN_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(samplePermission("read_only"))))
                 .andExpect(status().isCreated());
@@ -136,7 +145,7 @@ class PermissionControllerSecurityIT {
     }
 
     @Test
-    void updatePermission_shouldReturn403_whenMissingWriteScope() throws Exception {
+    void updatePermission_shouldReturn403_whenMissingAdminScope() throws Exception {
         mockMvc.perform(withScopes(put(PERMISSIONS_PATH + "/" + SEEDED_PERMISSION_ID), READ_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(samplePermission("updated_permission"))))
@@ -144,9 +153,17 @@ class PermissionControllerSecurityIT {
     }
 
     @Test
-    void updatePermission_shouldPassAuthorizationAndReachBusinessLogic_whenWriteScopePresent() throws Exception {
+    void updatePermission_shouldReturn403_whenOnlyWriteScopePresent() throws Exception {
+        mockMvc.perform(withScopes(put(PERMISSIONS_PATH + "/" + SEEDED_PERMISSION_ID), WRITE_SCOPE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(samplePermission("updated_permission"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updatePermission_shouldPassAuthorizationAndReachBusinessLogic_whenAdminScopePresent() throws Exception {
         // Authorization passes (no 403); request reaches PermissionService, which reports 404 for an unknown id
-        mockMvc.perform(withScopes(put(PERMISSIONS_PATH + "/" + UNKNOWN_ID), WRITE_SCOPE)
+        mockMvc.perform(withScopes(put(PERMISSIONS_PATH + "/" + UNKNOWN_ID), ADMIN_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(samplePermission("updated_permission"))))
                 .andExpect(status().isNotFound());
@@ -173,9 +190,15 @@ class PermissionControllerSecurityIT {
     }
 
     @Test
-    void deletePermission_shouldPassAuthorizationAndReachBusinessLogic_whenDeleteScopePresent() throws Exception {
+    void deletePermission_shouldReturn403_whenJwtOnlyHasDeleteScope() throws Exception {
+        mockMvc.perform(withScopes(delete(PERMISSIONS_PATH + "/" + SEEDED_PERMISSION_ID), DELETE_SCOPE))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deletePermission_shouldPassAuthorizationAndReachBusinessLogic_whenAdminScopePresent() throws Exception {
         // Authorization passes (no 403); request reaches PermissionService, which reports 404 for an unknown id
-        mockMvc.perform(withScopes(delete(PERMISSIONS_PATH + "/" + UNKNOWN_ID), DELETE_SCOPE))
+        mockMvc.perform(withScopes(delete(PERMISSIONS_PATH + "/" + UNKNOWN_ID), ADMIN_SCOPE))
                 .andExpect(status().isNotFound());
     }
 }

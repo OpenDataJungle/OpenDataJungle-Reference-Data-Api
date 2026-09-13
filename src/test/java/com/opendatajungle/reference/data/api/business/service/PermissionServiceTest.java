@@ -23,7 +23,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// TODO: Only Group Admin should create / update / delete permissions.
 @ExtendWith(MockitoExtension.class)
 class PermissionServiceTest {
 
@@ -76,6 +75,29 @@ class PermissionServiceTest {
         assertThatThrownBy(() -> permissionService.getById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Permission not found with id: " + id);
+    }
+
+    @Test
+    void getDefaultAdminPermission_shouldReturnSeededPermission_whenItExists() {
+        // Given
+        Permission defaultAdminPermission = Permission.builder().id(UUID.randomUUID()).name("DEFAULT_ADMIN_PERMISSION").isAdmin(true).build();
+        when(permissionRepository.findByName("DEFAULT_ADMIN_PERMISSION")).thenReturn(Optional.of(defaultAdminPermission));
+
+        // When
+        Permission result = permissionService.getDefaultAdminPermission();
+
+        // Then
+        assertThat(result).isSameAs(defaultAdminPermission);
+    }
+
+    @Test
+    void getDefaultAdminPermission_shouldThrowNotFoundException_whenNotSeeded() {
+        // Given
+        when(permissionRepository.findByName("DEFAULT_ADMIN_PERMISSION")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> permissionService.getDefaultAdminPermission())
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test

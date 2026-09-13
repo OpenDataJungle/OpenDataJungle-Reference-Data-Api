@@ -1,14 +1,14 @@
 package com.opendatajungle.reference.data.api.business.service;
 
+import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Group;
 import com.opendatajungle.reference.data.api.business.model.GroupUser;
+import com.opendatajungle.reference.data.api.business.model.Permission;
 import com.opendatajungle.reference.data.api.business.model.User;
 import com.opendatajungle.reference.data.api.business.repository.GroupRepository;
 import com.opendatajungle.reference.data.api.business.repository.GroupUserRepository;
-import com.opendatajungle.reference.data.api.business.repository.PermissionRepository;
-import com.opendatajungle.reference.data.api.business.repository.UserRepository;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +27,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// TODO: Only Group Admin should add / remove users in groups.
 @ExtendWith(MockitoExtension.class)
 class GroupUserServiceTest {
 
@@ -35,16 +34,19 @@ class GroupUserServiceTest {
     private GroupUserRepository groupUserRepository;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private GroupRepository groupRepository;
 
     @Mock
-    private PermissionRepository permissionRepository;
+    private UserUseCase userUseCase;
+
+    @Mock
+    private PermissionUseCase permissionUseCase;
 
     @InjectMocks
     private GroupUserService groupUserService;
+
+    private static final UUID CURRENT_USER_ID = UUID.randomUUID();
+    private static final User CURRENT_USER = User.builder().id(CURRENT_USER_ID).username("alex").build();
 
     @Test
     void getGroupsByUserId_shouldReturnPage_whenUserExists() {
@@ -52,7 +54,7 @@ class GroupUserServiceTest {
         UUID userId = UUID.randomUUID();
         User user = User.builder().id(userId).username("alex").build();
         PageResult<GroupUser> expected = PageResult.<GroupUser>builder().content(List.of()).build();
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userUseCase.getById(userId)).thenReturn(user);
         when(groupUserRepository.findGroupsByUserId(user, 1, 50)).thenReturn(expected);
 
         // When
@@ -66,7 +68,7 @@ class GroupUserServiceTest {
     void getGroupsByUserId_shouldThrowNotFoundException_whenUserAbsent() {
         // Given
         UUID userId = UUID.randomUUID();
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userUseCase.getById(userId)).thenThrow(new NotFoundException("User", userId.toString()));
 
         // When & Then
         assertThatThrownBy(() -> groupUserService.getGroupsByUserId(userId, 1, 50))
@@ -97,7 +99,6 @@ class GroupUserServiceTest {
         when(groupRepository.findById(groupId)).thenReturn(Optional.empty());
 
         // When & Then
-        // groupRepository.existsById(...) is unreachable here since findById() short-circuits first
         assertThatThrownBy(() -> groupUserService.getUsersByGroupId(groupId, 1, 50))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Group not found with id: " + groupId);
@@ -110,8 +111,10 @@ class GroupUserServiceTest {
         UUID userId = UUID.randomUUID();
         UUID permissionId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(true);
-        when(permissionRepository.existsById(permissionId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(permissionUseCase.existsById(permissionId)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(CURRENT_USER);
+        when(groupUserRepository.isUserAdminOfGroup(groupId, CURRENT_USER_ID)).thenReturn(true);
         when(groupUserRepository.isUserInGroup(groupId, userId)).thenReturn(false);
 
         // When
@@ -143,7 +146,7 @@ class GroupUserServiceTest {
         UUID userId = UUID.randomUUID();
         UUID permissionId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(false);
+        when(userUseCase.existsById(userId)).thenReturn(false);
 
         // When & Then
         assertThatThrownBy(() -> groupUserService.addUserToGroup(groupId, userId, permissionId))
@@ -159,13 +162,31 @@ class GroupUserServiceTest {
         UUID userId = UUID.randomUUID();
         UUID permissionId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(true);
-        when(permissionRepository.existsById(permissionId)).thenReturn(false);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(permissionUseCase.existsById(permissionId)).thenReturn(false);
 
         // When & Then
         assertThatThrownBy(() -> groupUserService.addUserToGroup(groupId, userId, permissionId))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Permission not found with id: " + permissionId);
+        verify(groupUserRepository, never()).addUserToGroup(any(), any(), any());
+    }
+
+    @Test
+    void addUserToGroup_shouldThrowAccessDeniedException_whenCallerIsNotGroupAdmin() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID permissionId = UUID.randomUUID();
+        when(groupRepository.existsById(groupId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(permissionUseCase.existsById(permissionId)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(CURRENT_USER);
+        when(groupUserRepository.isUserAdminOfGroup(groupId, CURRENT_USER_ID)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> groupUserService.addUserToGroup(groupId, userId, permissionId))
+                .isInstanceOf(AccessDeniedException.class);
         verify(groupUserRepository, never()).addUserToGroup(any(), any(), any());
     }
 
@@ -176,8 +197,10 @@ class GroupUserServiceTest {
         UUID userId = UUID.randomUUID();
         UUID permissionId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(true);
-        when(permissionRepository.existsById(permissionId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(permissionUseCase.existsById(permissionId)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(CURRENT_USER);
+        when(groupUserRepository.isUserAdminOfGroup(groupId, CURRENT_USER_ID)).thenReturn(true);
         when(groupUserRepository.isUserInGroup(groupId, userId)).thenReturn(true);
 
         // When & Then
@@ -197,7 +220,9 @@ class GroupUserServiceTest {
         UUID groupId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(CURRENT_USER);
+        when(groupUserRepository.isUserAdminOfGroup(groupId, CURRENT_USER_ID)).thenReturn(true);
         when(groupUserRepository.isUserInGroup(groupId, userId)).thenReturn(true);
 
         // When
@@ -227,7 +252,7 @@ class GroupUserServiceTest {
         UUID groupId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(false);
+        when(userUseCase.existsById(userId)).thenReturn(false);
 
         // When & Then
         assertThatThrownBy(() -> groupUserService.removeUserFromGroup(groupId, userId))
@@ -237,12 +262,30 @@ class GroupUserServiceTest {
     }
 
     @Test
+    void removeUserFromGroup_shouldThrowAccessDeniedException_whenCallerIsNotGroupAdmin() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(groupRepository.existsById(groupId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(CURRENT_USER);
+        when(groupUserRepository.isUserAdminOfGroup(groupId, CURRENT_USER_ID)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> groupUserService.removeUserFromGroup(groupId, userId))
+                .isInstanceOf(AccessDeniedException.class);
+        verify(groupUserRepository, never()).removeUserFromGroup(any(), any());
+    }
+
+    @Test
     void removeUserFromGroup_shouldThrowParamException_whenUserNotMember() {
         // Given
         UUID groupId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         when(groupRepository.existsById(groupId)).thenReturn(true);
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(CURRENT_USER);
+        when(groupUserRepository.isUserAdminOfGroup(groupId, CURRENT_USER_ID)).thenReturn(true);
         when(groupUserRepository.isUserInGroup(groupId, userId)).thenReturn(false);
 
         // When & Then
@@ -254,5 +297,44 @@ class GroupUserServiceTest {
                     assertThat(paramException.getField()).isEqualTo("userId");
                 });
         verify(groupUserRepository, never()).removeUserFromGroup(any(), any());
+    }
+
+    @Test
+    void grantGroupAdmin_shouldAttachDefaultAdminPermissionToUserGroupTuple_whenCalled() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID defaultAdminPermissionId = UUID.randomUUID();
+        Permission defaultAdminPermission = Permission.builder().id(defaultAdminPermissionId).name("DEFAULT_ADMIN_PERMISSION").isAdmin(true).build();
+        when(permissionUseCase.getDefaultAdminPermission()).thenReturn(defaultAdminPermission);
+
+        // When
+        groupUserService.grantGroupAdmin(groupId, userId);
+
+        // Then
+        verify(groupUserRepository).addUserToGroup(groupId, userId, defaultAdminPermissionId);
+    }
+
+    @Test
+    void requireGroupAdmin_shouldThrowAccessDeniedException_whenUserIsNotAdminOfGroup() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(groupUserRepository.isUserAdminOfGroup(groupId, userId)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> groupUserService.requireGroupAdmin(groupId, userId))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void requireGroupAdmin_shouldNotThrow_whenUserIsAdminOfGroup() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(groupUserRepository.isUserAdminOfGroup(groupId, userId)).thenReturn(true);
+
+        // When & Then
+        groupUserService.requireGroupAdmin(groupId, userId);
     }
 }

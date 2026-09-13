@@ -84,6 +84,40 @@ class PermissionRepositoryAdapterTest {
     }
 
     @Test
+    void findByName_shouldReturnMappedPermission_whenEntityExists() {
+        // Given
+        UUID id = UUID.randomUUID();
+        PermissionEntity entity = PermissionEntity.builder()
+                .id(id)
+                .name("DEFAULT_ADMIN_PERMISSION")
+                .canRead(true)
+                .canWrite(true)
+                .isAdmin(true)
+                .build();
+        when(permissionJpaRepository.findByName("DEFAULT_ADMIN_PERMISSION")).thenReturn(Optional.of(entity));
+
+        // When
+        Optional<Permission> result = permissionRepositoryAdapter.findByName("DEFAULT_ADMIN_PERMISSION");
+
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get().id()).isEqualTo(id);
+        assertThat(result.get().name()).isEqualTo("DEFAULT_ADMIN_PERMISSION");
+    }
+
+    @Test
+    void findByName_shouldReturnEmpty_whenEntityAbsent() {
+        // Given
+        when(permissionJpaRepository.findByName("unknown")).thenReturn(Optional.empty());
+
+        // When
+        Optional<Permission> result = permissionRepositoryAdapter.findByName("unknown");
+
+        // Then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void save_shouldCreateNewEntityWithGeneratedId_whenPermissionIdIsNull() {
         // Given
         Permission permission = Permission.builder().name("root_permission").canRead(true).canWrite(true).isAdmin(true).build();

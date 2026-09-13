@@ -9,11 +9,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.notNullValue;
@@ -27,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@WithMockUser
 @Transactional
 @Import(TestcontainersConfiguration.class)
 class GroupControllerIT {
@@ -38,6 +42,22 @@ class GroupControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private static RequestPostProcessor authenticated() {
+        return request -> {
+            Jwt jwt = Jwt.withTokenValue("token")
+                    .header("alg", "none")
+                    .claim("sub", "tester")
+                    .claim("preferred_username", "tester")
+                    .claim("given_name", "Test")
+                    .claim("family_name", "User")
+                    .issuedAt(Instant.now())
+                    .expiresAt(Instant.now().plusSeconds(3600))
+                    .build();
+            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
+            return request;
+        };
+    }
+
     @Test
     void createGroup_shouldPersistAndReturnCreatedGroup_whenNameIsUnique() throws Exception {
         // Given
@@ -45,6 +65,7 @@ class GroupControllerIT {
 
         // When & Then
         mockMvc.perform(post("/api/v1/groups")
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -60,6 +81,7 @@ class GroupControllerIT {
 
         // When & Then
         mockMvc.perform(post("/api/v1/groups")
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -73,6 +95,7 @@ class GroupControllerIT {
 
         // When & Then
         mockMvc.perform(post("/api/v1/groups")
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -108,6 +131,7 @@ class GroupControllerIT {
     void updateGroup_shouldPersistChanges_whenGroupExists() throws Exception {
         // Given
         String location = mockMvc.perform(post("/api/v1/groups")
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GroupRequest("to-update", "Before update"))))
                 .andExpect(status().isCreated())
@@ -116,6 +140,7 @@ class GroupControllerIT {
 
         // When & Then
         mockMvc.perform(put("/api/v1/groups/" + id)
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GroupRequest("updated", "After update"))))
                 .andExpect(status().isOk())
@@ -130,6 +155,7 @@ class GroupControllerIT {
 
         // When & Then
         mockMvc.perform(put("/api/v1/groups/" + UUID.randomUUID())
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -139,6 +165,7 @@ class GroupControllerIT {
     void deleteGroup_shouldRemoveGroup_whenGroupExists() throws Exception {
         // Given
         String created = mockMvc.perform(post("/api/v1/groups")
+                        .with(authenticated())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GroupRequest("to-delete", "Will be deleted"))))
                 .andExpect(status().isCreated())
@@ -146,7 +173,8 @@ class GroupControllerIT {
         String id = objectMapper.readTree(created).get("id").asText();
 
         // When
-        mockMvc.perform(delete("/api/v1/groups/" + id))
+        mockMvc.perform(delete("/api/v1/groups/" + id)
+                        .with(authenticated()))
                 .andExpect(status().isOk());
 
         // Then

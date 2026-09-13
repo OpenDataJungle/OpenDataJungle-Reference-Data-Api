@@ -115,7 +115,13 @@ class GroupControllerSecurityIT {
 
     @Test
     void createGroup_shouldReturn201_whenWriteScopePresent() throws Exception {
-        mockMvc.perform(withScopes(post(GROUPS_PATH), WRITE_SCOPE)
+        mockMvc.perform(post(GROUPS_PATH)
+                        .with(jwt()
+                                .authorities(new SimpleGrantedAuthority(WRITE_SCOPE))
+                                .jwt(jwtBuilder -> jwtBuilder
+                                        .claim("preferred_username", "creator")
+                                        .claim("given_name", "Group")
+                                        .claim("family_name", "Creator")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new GroupRequest("engineering", "Engineering group"))))
                 .andExpect(status().isCreated());

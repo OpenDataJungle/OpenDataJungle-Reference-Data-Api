@@ -1,6 +1,5 @@
 package com.opendatajungle.reference.data.api.business.service;
 
-import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Group;
