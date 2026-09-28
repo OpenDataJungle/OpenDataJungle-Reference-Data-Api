@@ -15,11 +15,9 @@ public interface UserRepository {
 
     boolean existsById(UUID id);
 
-    boolean existsByUsername(String username);
-
-    boolean existsByUsernameAndIdNot(String username, UUID id);
+    boolean existsByAuthIdAndAuthIss(String authId, String authIss);
 
     void deleteById(UUID id);
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findByAuthIdAndAuthIss(String authId, String authIss);
 }

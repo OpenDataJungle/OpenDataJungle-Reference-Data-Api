@@ -8,6 +8,8 @@ public record User(
         String firstName,
         String lastName,
         String username,
+        String authId,
+        String authIss,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -20,6 +22,8 @@ public record User(
         private String firstName;
         private String lastName;
         private String username;
+        private String authId;
+        private String authIss;
         private Instant createdAt;
         private Instant updatedAt;
 
@@ -46,6 +50,16 @@ public record User(
             return this;
         }
 
+        public UserBuilder authId(String authId) {
+            this.authId = authId;
+            return this;
+        }
+
+        public UserBuilder authIss(String authIss) {
+            this.authIss = authIss;
+            return this;
+        }
+
         public UserBuilder createdAt(Instant createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -57,7 +71,7 @@ public record User(
         }
 
         public User build() {
-            return new User(id, firstName, lastName, username, createdAt, updatedAt);
+            return new User(id, firstName, lastName, username, authId, authIss, createdAt, updatedAt);
         }
     }
 }

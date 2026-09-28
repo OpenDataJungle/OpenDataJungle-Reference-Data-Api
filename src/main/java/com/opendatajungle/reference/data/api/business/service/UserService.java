@@ -7,6 +7,7 @@ import com.opendatajungle.reference.data.api.business.model.User;
 import com.opendatajungle.reference.data.api.business.repository.UserRepository;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 
+import java.util.Map;
 import java.util.UUID;
 
 public class UserService implements UserUseCase {
@@ -39,12 +40,23 @@ public class UserService implements UserUseCase {
 
     @Override
     public User create(User user) {
-        if (userRepository.existsByUsername(user.username())) {
+        if (user.authId() == null || user.authId().isBlank()) {
             throw new ParamException(
-                    "USER_USERNAME_ALREADY_EXISTS",
-                    "A user with username '" + user.username() + "' already exists",
-                    "username"
+                    "USER_AUTH_ID_REQUIRED",
+                    "User authId is required",
+                    "authId"
             );
+        }
+        if (user.authIss() == null || user.authIss().isBlank()) {
+            throw new ParamException(
+                    "USER_AUTH_ISS_REQUIRED",
+                    "User authIss is required",
+                    "authIss"
+            );
+        }
+
+        if (userRepository.existsByAuthIdAndAuthIss(user.authId(), user.authIss())) {
+            throw authIdentityAlreadyExists(user.authId(), user.authIss());
         }
         return userRepository.save(user);
     }
@@ -54,13 +66,6 @@ public class UserService implements UserUseCase {
         if (!userRepository.existsById(id)) {
             throw new NotFoundException(USER, id.toString());
         }
-        if (userRepository.existsByUsernameAndIdNot(user.username(), id)) {
-            throw new ParamException(
-                    "USER_USERNAME_ALREADY_EXISTS",
-                    "A user with username '" + user.username() + "' already exists",
-                    "username"
-            );
-        }
         User toUpdate = User.builder()
                 .id(id)
                 .firstName(user.firstName())
@@ -68,6 +73,15 @@ public class UserService implements UserUseCase {
                 .username(user.username())
                 .build();
         return userRepository.save(toUpdate);
+    }
+
+    private static ParamException authIdentityAlreadyExists(String authId, String authIss) {
+        return new ParamException(
+                "USER_AUTH_IDENTITY_ALREADY_EXISTS",
+                "A user with authIss '" + authIss + "' and authId '" + authId + "' already exists",
+                "authId",
+                Map.of("authIss", authIss)
+        );
     }
 
     @Override
@@ -79,14 +93,22 @@ public class UserService implements UserUseCase {
     }
 
     @Override
-    public User getByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException(USER, username));
-    }
-
-    @Override
     public User getOrCreateCurrentUser() {
-        String username = authenticationUseCase.findCurrentUser()
+        String authId = authenticationUseCase.findCurrentUserAuthId()
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParamException(
+                        "USER_AUTH_ID_REQUIRED",
+                        "Current authenticated user has no authId",
+                        "authId"
+                ));
+        String authIss = authenticationUseCase.findCurrentUserAuthIss()
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParamException(
+                        "USER_AUTH_ISS_REQUIRED",
+                        "Current authenticated user has no authIss",
+                        "authIss"
+                ));
+        String username = authenticationUseCase.findCurrentUserUsername()
                 .filter(value -> !value.isBlank())
                 .orElseThrow(() -> new ParamException(
                         "USER_USERNAME_REQUIRED",
@@ -108,11 +130,13 @@ public class UserService implements UserUseCase {
                         "lastName"
                 ));
 
-        return userRepository.findByUsername(username)
+        return userRepository.findByAuthIdAndAuthIss(authId, authIss)
                 .orElseGet(() -> userRepository.save(User.builder()
                         .firstName(firstName)
                         .lastName(lastName)
                         .username(username)
+                        .authId(authId)
+                        .authIss(authIss)
                         .build()));
     }
 }

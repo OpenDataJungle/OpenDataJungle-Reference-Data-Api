@@ -20,6 +20,8 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String username;
+    private String authId;
+    private String authIss;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -29,6 +31,8 @@ public class UserResponse {
                 .firstName(user.firstName())
                 .lastName(user.lastName())
                 .username(user.username())
+                .authId(user.authId())
+                .authIss(user.authIss())
                 .createdAt(user.createdAt())
                 .updatedAt(user.updatedAt())
                 .build();

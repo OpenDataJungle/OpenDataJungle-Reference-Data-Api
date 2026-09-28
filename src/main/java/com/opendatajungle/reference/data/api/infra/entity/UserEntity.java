@@ -9,6 +9,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users", schema = "reference_data")
+@Table(name = "users", schema = "reference_data",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"authIss", "authId"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,8 +40,14 @@ public class UserEntity {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String username;
+
+    @Column(nullable = false)
+    private String authId;
+
+    @Column(nullable = false)
+    private String authIss;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

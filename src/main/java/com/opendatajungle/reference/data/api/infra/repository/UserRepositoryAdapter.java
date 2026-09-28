@@ -68,6 +68,8 @@ public class UserRepositoryAdapter implements UserRepository {
             entity.setFirstName(user.firstName());
             entity.setLastName(user.lastName());
             entity.setUsername(user.username());
+            entity.setAuthId(user.authId());
+            entity.setAuthIss(user.authIss());
         } else {
             entity = toEntity(user);
             entity.setId(UUID.randomUUID());
@@ -83,14 +85,8 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsByUsername(String username) {
-        return userJpaRepository.existsByUsername(username);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsByUsernameAndIdNot(String username, UUID id) {
-        return userJpaRepository.existsByUsernameAndIdNot(username, id);
+    public boolean existsByAuthIdAndAuthIss(String authId, String authIss) {
+        return userJpaRepository.existsByAuthIdAndAuthIss(authId, authIss);
     }
 
     @Override
@@ -105,6 +101,8 @@ public class UserRepositoryAdapter implements UserRepository {
                 .firstName(entity.getFirstName())
                 .lastName(entity.getLastName())
                 .username(entity.getUsername())
+                .authId(entity.getAuthId())
+                .authIss(entity.getAuthIss())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -116,6 +114,8 @@ public class UserRepositoryAdapter implements UserRepository {
                 .firstName(user.firstName())
                 .lastName(user.lastName())
                 .username(user.username())
+                .authId(user.authId())
+                .authIss(user.authIss())
                 .createdAt(user.createdAt())
                 .updatedAt(user.updatedAt())
                 .build();
@@ -123,7 +123,7 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> findByUsername(String username) {
-        return userJpaRepository.findByUsername(username).map(this::toBusinessModel);
+    public Optional<User> findByAuthIdAndAuthIss(String authId, String authIss) {
+        return userJpaRepository.findByAuthIdAndAuthIss(authId, authIss).map(this::toBusinessModel);
     }
 }

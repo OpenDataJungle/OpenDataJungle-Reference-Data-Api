@@ -109,6 +109,8 @@ public class GroupUserRepositoryAdapter implements GroupUserRepository {
                 .firstName(entity.getFirstName())
                 .lastName(entity.getLastName())
                 .username(entity.getUsername())
+                .authId(entity.getAuthId())
+                .authIss(entity.getAuthIss())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

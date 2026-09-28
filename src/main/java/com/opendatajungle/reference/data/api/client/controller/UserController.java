@@ -54,12 +54,6 @@ public class UserController {
     }
 
     @PreAuthorize(SecurityExpressions.REFERENCEDATA_READ)
-    @GetMapping("/username/{username}")
-    public UserResponse getUserByUsername(@PathVariable String username) {
-        return UserResponse.fromBusiness(userUseCase.getByUsername(username));
-    }
-
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_READ)
     @PostMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserResponse getOrCreateMe() {
         return UserResponse.fromBusiness(userUseCase.getOrCreateCurrentUser());

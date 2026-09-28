@@ -19,11 +19,19 @@ public class UserRequest {
     @NotBlank(message = "User username is required")
     private String username;
 
+    @NotBlank(message = "User authId is required")
+    private String authId;
+
+    @NotBlank(message = "User authIss is required")
+    private String authIss;
+
     public User toBusiness() {
         return User.builder()
                 .firstName(this.firstName)
                 .lastName(this.lastName)
                 .username(this.username)
+                .authId(this.authId)
+                .authIss(this.authIss)
                 .build();
     }
 }

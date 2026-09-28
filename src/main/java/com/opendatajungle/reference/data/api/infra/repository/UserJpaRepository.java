@@ -11,9 +11,7 @@ import java.util.UUID;
 @Repository
 public interface UserJpaRepository extends JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
 
-    boolean existsByUsername(String username);
+    boolean existsByAuthIdAndAuthIss(String authId, String authIss);
 
-    boolean existsByUsernameAndIdNot(String username, UUID id);
-
-    Optional<UserEntity> findByUsername(String username);
+    Optional<UserEntity> findByAuthIdAndAuthIss(String authId, String authIss);
 }
