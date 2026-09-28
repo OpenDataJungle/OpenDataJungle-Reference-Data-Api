@@ -13,9 +13,12 @@ CREATE TABLE reference_data.users (
                        id UUID PRIMARY KEY,
                        first_name VARCHAR NOT NULL,
                        last_name VARCHAR NOT NULL,
-                       username VARCHAR NOT NULL UNIQUE,
+                       username VARCHAR NOT NULL,
+                       auth_id VARCHAR NOT NULL,
+                       auth_iss VARCHAR NOT NULL,
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       CONSTRAINT uk_users_auth_iss_auth_id UNIQUE (auth_iss, auth_id)
 );
 
 CREATE TABLE reference_data.groups (
@@ -47,8 +50,8 @@ CREATE TABLE reference_data.group_users (
 
 
 -- Default user and group (default user : anonymous) and root group (default group : root)
-INSERT INTO reference_data.users (id, first_name, last_name, username)
-VALUES ('00000000-0000-0000-0000-000000000001', 'Anonymous', 'User', 'anonymous');
+INSERT INTO reference_data.users (id, first_name, last_name, username, auth_id, auth_iss)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Anonymous', 'User', 'anonymous', 'anonymous', 'https://system.internal.localhost');
 
 INSERT INTO reference_data.groups (id, name, description)
 VALUES ('00000000-0000-0000-0000-000000000001', 'root', 'Root group with all permissions');
