@@ -97,26 +97,6 @@ class UserControllerSecurityIT {
                 .andExpect(status().isOk());
     }
 
-    // --- getUserByUsername ---
-
-    @Test
-    void getUserByUsername_shouldReturn401_whenUnauthenticated() throws Exception {
-        mockMvc.perform(get(USERS_PATH + "/username/" + SEEDED_USERNAME))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void getUserByUsername_shouldReturn403_whenMissingReadScope() throws Exception {
-        mockMvc.perform(withScopes(get(USERS_PATH + "/username/" + SEEDED_USERNAME), WRITE_SCOPE))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void getUserByUsername_shouldReturn200_whenReadScopePresent() throws Exception {
-        mockMvc.perform(withScopes(get(USERS_PATH + "/username/" + SEEDED_USERNAME), READ_SCOPE))
-                .andExpect(status().isOk());
-    }
-
     // --- getOrCreateMe ---
 
     @Test
@@ -133,27 +113,34 @@ class UserControllerSecurityIT {
 
     @Test
     void getOrCreateMe_shouldCreateUser_whenCurrentJwtUserNotYetRegistered() throws Exception {
-        // getOrCreateMe reads "preferred_username"/"given_name"/"family_name" JWT claims via
-        // SecurityContextHolder, which is only populated under the real SecurityConfiguration.
+        // getOrCreateMe reads "sub"/"iss"/"preferred_username"/"given_name"/"family_name" JWT claims
+        // via SecurityContextHolder, which is only populated under the real SecurityConfiguration.
         mockMvc.perform(post(USERS_PATH + "/me")
                         .with(jwt()
                                 .authorities(new SimpleGrantedAuthority(READ_SCOPE))
                                 .jwt(jwtBuilder -> jwtBuilder
+                                        .claim("sub", "newuser-auth-id")
+                                        .claim("iss", "https://system.internal.localhost")
                                         .claim("preferred_username", "newuser")
                                         .claim("given_name", "New")
                                         .claim("family_name", "User"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("newuser"))
+                .andExpect(jsonPath("$.authId").value("newuser-auth-id"))
+                .andExpect(jsonPath("$.authIss").value("https://system.internal.localhost"))
                 .andExpect(jsonPath("$.firstName").value("New"))
                 .andExpect(jsonPath("$.lastName").value("User"));
     }
 
     @Test
     void getOrCreateMe_shouldReturnExistingUser_whenCurrentJwtUserAlreadyRegistered() throws Exception {
+        // The seeded anonymous user has authId=anonymous / authIss=https://system.internal.localhost (see init-reference-data.sql)
         mockMvc.perform(post(USERS_PATH + "/me")
                         .with(jwt()
                                 .authorities(new SimpleGrantedAuthority(READ_SCOPE))
                                 .jwt(jwtBuilder -> jwtBuilder
+                                        .claim("sub", "anonymous")
+                                        .claim("iss", "https://system.internal.localhost")
                                         .claim("preferred_username", SEEDED_USERNAME)
                                         .claim("given_name", "Anonymous")
                                         .claim("family_name", "User"))))
@@ -168,7 +155,7 @@ class UserControllerSecurityIT {
     void createUser_shouldReturn401_whenUnauthenticated() throws Exception {
         mockMvc.perform(post(USERS_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("New", "User", "newuser"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("New", "User", "newuser", "newuser-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -176,7 +163,7 @@ class UserControllerSecurityIT {
     void createUser_shouldReturn403_whenMissingWriteScope() throws Exception {
         mockMvc.perform(withScopes(post(USERS_PATH), READ_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("New", "User", "newuser"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("New", "User", "newuser", "newuser-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isForbidden());
     }
 
@@ -184,7 +171,7 @@ class UserControllerSecurityIT {
     void createUser_shouldReturn201_whenWriteScopePresent() throws Exception {
         mockMvc.perform(withScopes(post(USERS_PATH), WRITE_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("New", "User", "newuser"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("New", "User", "newuser", "newuser-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isCreated());
     }
 
@@ -194,7 +181,7 @@ class UserControllerSecurityIT {
     void updateUser_shouldReturn401_whenUnauthenticated() throws Exception {
         mockMvc.perform(put(USERS_PATH + "/" + SEEDED_USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("Updated", "User", "updateduser"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("Updated", "User", "updateduser", "updateduser-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -202,7 +189,7 @@ class UserControllerSecurityIT {
     void updateUser_shouldReturn403_whenMissingWriteScope() throws Exception {
         mockMvc.perform(withScopes(put(USERS_PATH + "/" + SEEDED_USER_ID), READ_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("Updated", "User", "updateduser"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("Updated", "User", "updateduser", "updateduser-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isForbidden());
     }
 
@@ -211,7 +198,7 @@ class UserControllerSecurityIT {
         // Authorization passes (no 403); request reaches UserService, which reports 404 for an unknown id
         mockMvc.perform(withScopes(put(USERS_PATH + "/" + UNKNOWN_ID), WRITE_SCOPE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("Updated", "User", "updateduser"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("Updated", "User", "updateduser", "updateduser-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isNotFound());
     }
 

@@ -22,6 +22,8 @@ class UserResponseTest {
                 .firstName("Ada")
                 .lastName("Lovelace")
                 .username("ada")
+                .authId("auth-id")
+                .authIss("https://system.internal.localhost")
                 .createdAt(createdAt)
                 .updatedAt(updatedAt)
                 .build();
@@ -34,6 +36,8 @@ class UserResponseTest {
         assertThat(response.getFirstName()).isEqualTo("Ada");
         assertThat(response.getLastName()).isEqualTo("Lovelace");
         assertThat(response.getUsername()).isEqualTo("ada");
+        assertThat(response.getAuthId()).isEqualTo("auth-id");
+        assertThat(response.getAuthIss()).isEqualTo("https://system.internal.localhost");
         assertThat(response.getCreatedAt()).isEqualTo(createdAt);
         assertThat(response.getUpdatedAt()).isEqualTo(updatedAt);
     }

@@ -10,7 +10,7 @@ class UserRequestTest {
     @Test
     void toBusiness_shouldMapAllFields_whenCalled() {
         // Given
-        UserRequest request = new UserRequest("Ada", "Lovelace", "ada");
+        UserRequest request = new UserRequest("Ada", "Lovelace", "ada", "auth-id", "https://system.internal.localhost");
 
         // When
         User user = request.toBusiness();
@@ -20,5 +20,7 @@ class UserRequestTest {
         assertThat(user.firstName()).isEqualTo("Ada");
         assertThat(user.lastName()).isEqualTo("Lovelace");
         assertThat(user.username()).isEqualTo("ada");
+        assertThat(user.authId()).isEqualTo("auth-id");
+        assertThat(user.authIss()).isEqualTo("https://system.internal.localhost");
     }
 }

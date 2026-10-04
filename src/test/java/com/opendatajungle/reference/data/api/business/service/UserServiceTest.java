@@ -82,12 +82,43 @@ class UserServiceTest {
     }
 
     @Test
-    void update_shouldSaveUser_whenIdExistsAndUsernameFree() {
+    void create_shouldSaveUser_whenAuthIdentityFree() {
+        // Given
+        User user = User.builder().firstName("Ada").lastName("Lovelace").username("ada").authId("auth-id").authIss("https://system.internal.localhost").build();
+        when(userRepository.existsByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(false);
+        when(userRepository.save(user)).thenReturn(user);
+
+        // When
+        User result = userService.create(user);
+
+        // Then
+        assertThat(result).isSameAs(user);
+    }
+
+    @Test
+    void create_shouldThrowParamException_whenAuthIdentityAlreadyExists() {
+        // Given
+        User user = User.builder().firstName("Ada").lastName("Lovelace").username("ada").authId("auth-id").authIss("https://system.internal.localhost").build();
+        when(userRepository.existsByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> userService.create(user))
+                .isInstanceOf(ParamException.class)
+                .satisfies(ex -> {
+                    ParamException paramException = (ParamException) ex;
+                    assertThat(paramException.getCode()).isEqualTo("USER_AUTH_IDENTITY_ALREADY_EXISTS");
+                    assertThat(paramException.getField()).isEqualTo("authId");
+                    assertThat(paramException.getInformation()).containsEntry("authIss", "https://system.internal.localhost");
+                });
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void update_shouldSaveUser_whenIdExistsAndAuthIdentityFree() {
         // Given
         UUID id = UUID.randomUUID();
-        User user = User.builder().firstName("firstName").lastName("lastName").username("username").build();
+        User user = User.builder().firstName("firstName").lastName("lastName").username("username").authId("auth-id").authIss("https://system.internal.localhost").build();
         when(userRepository.existsById(id)).thenReturn(true);
-        when(userRepository.existsByUsernameAndIdNot("username", id)).thenReturn(false);
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         when(userRepository.save(any())).thenReturn(user);
 
@@ -101,6 +132,8 @@ class UserServiceTest {
         assertThat(toUpdate.firstName()).isEqualTo("firstName");
         assertThat(toUpdate.lastName()).isEqualTo("lastName");
         assertThat(toUpdate.username()).isEqualTo("username");
+        assertThat(toUpdate.authId()).isEqualTo(null); // never updated
+        assertThat(toUpdate.authIss()).isEqualTo(null); // never updated
         assertThat(toUpdate.createdAt()).isNull();
         assertThat(toUpdate.updatedAt()).isNull();
         assertThat(result).isSameAs(user);
@@ -110,32 +143,13 @@ class UserServiceTest {
     void update_shouldThrowNotFoundException_whenUserAbsent() {
         // Given
         UUID id = UUID.randomUUID();
-        User user = User.builder().username("username").build();
+        User user = User.builder().username("username").authId("auth-id").authIss("https://system.internal.localhost").build();
         when(userRepository.existsById(id)).thenReturn(false);
 
         // When & Then
         assertThatThrownBy(() -> userService.update(id, user))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("User not found with id: " + id);
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void update_shouldThrowParamException_whenUsernameTakenByAnotherUser() {
-        // Given
-        UUID id = UUID.randomUUID();
-        User user = User.builder().username("duplicate").build();
-        when(userRepository.existsById(id)).thenReturn(true);
-        when(userRepository.existsByUsernameAndIdNot("duplicate", id)).thenReturn(true);
-
-        // When & Then
-        assertThatThrownBy(() -> userService.update(id, user))
-                .isInstanceOf(ParamException.class)
-                .satisfies(ex -> {
-                    ParamException paramException = (ParamException) ex;
-                    assertThat(paramException.getCode()).isEqualTo("USER_USERNAME_ALREADY_EXISTS");
-                    assertThat(paramException.getField()).isEqualTo("username");
-                });
         verify(userRepository, never()).save(any());
     }
 
@@ -166,37 +180,15 @@ class UserServiceTest {
     }
 
     @Test
-    void getByUsername_shouldReturnUser_whenUserExists() {
+    void getOrCreateCurrentUser_shouldReturnExistingUser_whenAuthIdentityAlreadyRegistered() {
         // Given
-        User user = User.builder().username("ada").build();
-        when(userRepository.findByUsername("ada")).thenReturn(Optional.of(user));
-
-        // When
-        User result = userService.getByUsername("ada");
-
-        // Then
-        assertThat(result).isSameAs(user);
-    }
-
-    @Test
-    void getByUsername_shouldThrowNotFoundException_whenUserAbsent() {
-        // Given
-        when(userRepository.findByUsername("ada")).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> userService.getByUsername("ada"))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("User not found with id: ada");
-    }
-
-    @Test
-    void getOrCreateCurrentUser_shouldReturnExistingUser_whenUsernameAlreadyRegistered() {
-        // Given
-        User existing = User.builder().id(UUID.randomUUID()).username("ada").firstName("Ada").lastName("Lovelace").build();
-        when(authenticationUseCase.findCurrentUser()).thenReturn(Optional.of("ada"));
+        User existing = User.builder().id(UUID.randomUUID()).username("ada").authId("auth-id").authIss("https://system.internal.localhost").firstName("Ada").lastName("Lovelace").build();
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
+        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
+        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("ada"));
         when(authenticationUseCase.findCurrentUserFirstName()).thenReturn(Optional.of("Ada"));
         when(authenticationUseCase.findCurrentUserLastName()).thenReturn(Optional.of("Lovelace"));
-        when(userRepository.findByUsername("ada")).thenReturn(Optional.of(existing));
+        when(userRepository.findByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(Optional.of(existing));
 
         // When
         User result = userService.getOrCreateCurrentUser();
@@ -207,14 +199,16 @@ class UserServiceTest {
     }
 
     @Test
-    void getOrCreateCurrentUser_shouldCreateUser_whenUsernameNotYetRegistered() {
+    void getOrCreateCurrentUser_shouldCreateUser_whenAuthIdentityNotYetRegistered() {
         // Given
-        when(authenticationUseCase.findCurrentUser()).thenReturn(Optional.of("ada"));
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
+        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
+        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("ada"));
         when(authenticationUseCase.findCurrentUserFirstName()).thenReturn(Optional.of("Ada"));
         when(authenticationUseCase.findCurrentUserLastName()).thenReturn(Optional.of("Lovelace"));
-        when(userRepository.findByUsername("ada")).thenReturn(Optional.empty());
+        when(userRepository.findByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(Optional.empty());
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        User saved = User.builder().id(UUID.randomUUID()).username("ada").firstName("Ada").lastName("Lovelace").build();
+        User saved = User.builder().id(UUID.randomUUID()).username("ada").authId("auth-id").authIss("https://system.internal.localhost").firstName("Ada").lastName("Lovelace").build();
         when(userRepository.save(any())).thenReturn(saved);
 
         // When
@@ -225,15 +219,50 @@ class UserServiceTest {
         User toCreate = captor.getValue();
         assertThat(toCreate.id()).isNull();
         assertThat(toCreate.username()).isEqualTo("ada");
+        assertThat(toCreate.authId()).isEqualTo("auth-id");
+        assertThat(toCreate.authIss()).isEqualTo("https://system.internal.localhost");
         assertThat(toCreate.firstName()).isEqualTo("Ada");
         assertThat(toCreate.lastName()).isEqualTo("Lovelace");
         assertThat(result).isSameAs(saved);
     }
 
     @Test
+    void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentAuthIdBlank() {
+        // Given
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("  "));
+
+        // When & Then
+        assertThatThrownBy(() -> userService.getOrCreateCurrentUser())
+                .isInstanceOf(ParamException.class)
+                .satisfies(ex -> {
+                    ParamException paramException = (ParamException) ex;
+                    assertThat(paramException.getCode()).isEqualTo("USER_AUTH_ID_REQUIRED");
+                    assertThat(paramException.getField()).isEqualTo("authId");
+                });
+    }
+
+    @Test
+    void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentAuthIssBlank() {
+        // Given
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
+        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> userService.getOrCreateCurrentUser())
+                .isInstanceOf(ParamException.class)
+                .satisfies(ex -> {
+                    ParamException paramException = (ParamException) ex;
+                    assertThat(paramException.getCode()).isEqualTo("USER_AUTH_ISS_REQUIRED");
+                    assertThat(paramException.getField()).isEqualTo("authIss");
+                });
+    }
+
+    @Test
     void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentUsernameBlank() {
         // Given
-        when(authenticationUseCase.findCurrentUser()).thenReturn(Optional.of("  "));
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
+        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
+        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("  "));
 
         // When & Then
         assertThatThrownBy(() -> userService.getOrCreateCurrentUser())
@@ -248,7 +277,9 @@ class UserServiceTest {
     @Test
     void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentFirstNameBlank() {
         // Given
-        when(authenticationUseCase.findCurrentUser()).thenReturn(Optional.of("ada"));
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
+        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
+        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("ada"));
         when(authenticationUseCase.findCurrentUserFirstName()).thenReturn(Optional.of(""));
 
         // When & Then
@@ -264,7 +295,9 @@ class UserServiceTest {
     @Test
     void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentLastNameBlank() {
         // Given
-        when(authenticationUseCase.findCurrentUser()).thenReturn(Optional.of("ada"));
+        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
+        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
+        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("ada"));
         when(authenticationUseCase.findCurrentUserFirstName()).thenReturn(Optional.of("Ada"));
         when(authenticationUseCase.findCurrentUserLastName()).thenReturn(Optional.empty());
 

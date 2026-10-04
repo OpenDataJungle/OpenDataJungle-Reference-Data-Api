@@ -65,19 +65,6 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserByUsername_shouldReturnMappedUser_whenCalled() {
-        // Given
-        User user = User.builder().id(UUID.randomUUID()).username("alex").build();
-        when(userUseCase.getByUsername("alex")).thenReturn(user);
-
-        // When
-        UserResponse response = userController.getUserByUsername("alex");
-
-        // Then
-        assertThat(response).isEqualTo(UserResponse.fromBusiness(user));
-    }
-
-    @Test
     void getOrCreateMe_shouldReturnMappedCurrentUser_whenCalled() {
         // Given
         User user = User.builder().id(UUID.randomUUID()).username("alex").build();
@@ -93,7 +80,7 @@ class UserControllerTest {
     @Test
     void createUser_shouldDelegateToUseCaseWithMappedBusinessObject_whenCalled() {
         // Given
-        UserRequest request = new UserRequest("Ada", "Lovelace", "ada");
+        UserRequest request = new UserRequest("Ada", "Lovelace", "ada", "auth-id", "https://system.internal.localhost");
         User created = User.builder().id(UUID.randomUUID()).username("ada").build();
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         when(userUseCase.create(captor.capture())).thenReturn(created);
@@ -113,7 +100,7 @@ class UserControllerTest {
     void updateUser_shouldDelegateToUseCaseWithIdAndMappedBusinessObject_whenCalled() {
         // Given
         UUID id = UUID.randomUUID();
-        UserRequest request = new UserRequest("alex", "lem", "alexx");
+        UserRequest request = new UserRequest("alex", "lem", "alexx", "auth-id-2", "https://system.internal.localhost");
         User updated = User.builder().id(id).username("alexx").build();
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         when(userUseCase.update(eq(id), captor.capture())).thenReturn(updated);

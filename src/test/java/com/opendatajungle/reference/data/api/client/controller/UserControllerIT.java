@@ -37,9 +37,9 @@ class UserControllerIT {
     private ObjectMapper objectMapper;
 
     @Test
-    void createUser_shouldPersistAndReturnCreatedUser_whenUsernameIsUnique() throws Exception {
+    void createUser_shouldPersistAndReturnCreatedUser_whenAuthIdentityIsUnique() throws Exception {
         // Given
-        UserRequest request = new UserRequest("Grace", "Hopper", "grace");
+        UserRequest request = new UserRequest("Grace", "Hopper", "grace", "auth-id", "https://system.internal.localhost");
 
         // When & Then
         mockMvc.perform(post("/api/v1/users")
@@ -48,21 +48,37 @@ class UserControllerIT {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(notNullValue()))
                 .andExpect(jsonPath("$.username").value("grace"))
+                .andExpect(jsonPath("$.authId").value("auth-id"))
+                .andExpect(jsonPath("$.authIss").value("https://system.internal.localhost"))
                 .andExpect(jsonPath("$.firstName").value("Grace"))
                 .andExpect(jsonPath("$.lastName").value("Hopper"));
     }
 
     @Test
-    void createUser_shouldReturnBadRequest_whenUsernameAlreadyExists() throws Exception {
-        // Given
-        UserRequest request = new UserRequest("Another", "Anonymous", "anonymous");
+    void createUser_shouldReturnBadRequest_whenAuthIdentityAlreadyExists() throws Exception {
+        // Given: authId/authIss matching the seeded anonymous user
+        UserRequest request = new UserRequest("Another", "Person", "someone-else", "anonymous", "https://system.internal.localhost");
 
         // When & Then
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("USER_USERNAME_ALREADY_EXISTS"));
+                .andExpect(jsonPath("$.code").value("USER_AUTH_IDENTITY_ALREADY_EXISTS"));
+    }
+
+    @Test
+    void createUser_shouldSucceed_whenUsernameAlreadyExistsButAuthIdentityDiffers() throws Exception {
+        // Given: same username as the seeded anonymous user, but a distinct authId/authIss
+        UserRequest request = new UserRequest("Another", "Anonymous", "anonymous", "another-auth-id", "https://system.internal.localhost");
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value("anonymous"))
+                .andExpect(jsonPath("$.authId").value("another-auth-id"));
     }
 
     @Test
@@ -82,26 +98,11 @@ class UserControllerIT {
     }
 
     @Test
-    void getUserByUsername_shouldReturnSeededAnonymousUser_whenUsernameExists() throws Exception {
-        // When & Then
-        mockMvc.perform(get("/api/v1/users/username/anonymous"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("anonymous"));
-    }
-
-    @Test
-    void getUserByUsername_shouldReturnNotFound_whenUsernameDoesNotExist() throws Exception {
-        // When & Then
-        mockMvc.perform(get("/api/v1/users/username/does-not-exist"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
     void updateUser_shouldPersistChanges_whenUserExists() throws Exception {
         // Given
         String created = mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("Before", "Update", "to-update"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("Before", "Update", "to-update", "to-update-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         String id = objectMapper.readTree(created).get("id").asText();
@@ -109,7 +110,7 @@ class UserControllerIT {
         // When & Then
         mockMvc.perform(put("/api/v1/users/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("After", "Update", "updated"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("After", "Update", "updated", "updated-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("updated"))
                 .andExpect(jsonPath("$.lastName").value("Update"))
@@ -121,7 +122,7 @@ class UserControllerIT {
         // Given
         String created = mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("To", "Delete", "to-delete"))))
+                        .content(objectMapper.writeValueAsString(new UserRequest("To", "Delete", "to-delete", "to-delete-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         String id = objectMapper.readTree(created).get("id").asText();

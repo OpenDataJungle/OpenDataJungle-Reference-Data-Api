@@ -51,6 +51,7 @@ class GroupUserControllerIT {
             Jwt jwt = Jwt.withTokenValue("token")
                     .header("alg", "none")
                     .claim("sub", "anonymous")
+                    .claim("iss", "https://system.internal.localhost")
                     .claim("preferred_username", "anonymous")
                     .claim("given_name", "Anonymous")
                     .claim("family_name", "User")
@@ -178,7 +179,7 @@ class GroupUserControllerIT {
     private String createUser(String firstName, String lastName, String username) throws Exception {
         String response = mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest(firstName, lastName, username))))
+                        .content(objectMapper.writeValueAsString(new UserRequest(firstName, lastName, username, username + "-auth-id", "https://system.internal.localhost"))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("id").asText();

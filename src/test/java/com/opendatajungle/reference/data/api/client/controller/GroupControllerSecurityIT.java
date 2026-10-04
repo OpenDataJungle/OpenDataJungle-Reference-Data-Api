@@ -119,6 +119,7 @@ class GroupControllerSecurityIT {
                         .with(jwt()
                                 .authorities(new SimpleGrantedAuthority(WRITE_SCOPE))
                                 .jwt(jwtBuilder -> jwtBuilder
+                                        .claim("iss", "https://system.internal.localhost")
                                         .claim("preferred_username", "creator")
                                         .claim("given_name", "Group")
                                         .claim("family_name", "Creator")))

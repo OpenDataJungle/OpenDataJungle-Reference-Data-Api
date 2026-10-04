@@ -20,7 +20,6 @@ import org.springframework.data.jpa.domain.Specification;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -150,28 +149,15 @@ class UserRepositoryAdapterTest {
     }
 
     @Test
-    void existsByUsername_shouldDelegateToJpaRepository_whenCalled() {
+    void existsByAuthIdAndAuthIss_shouldDelegateToJpaRepository_whenCalled() {
         // Given
-        when(userJpaRepository.existsByUsername("ada")).thenReturn(true);
+        when(userJpaRepository.existsByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(true);
 
         // When
-        boolean result = userRepositoryAdapter.existsByUsername("ada");
+        boolean result = userRepositoryAdapter.existsByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost");
 
         // Then
         assertThat(result).isTrue();
-    }
-
-    @Test
-    void existsByUsernameAndIdNot_shouldDelegateToJpaRepository_whenCalled() {
-        // Given
-        UUID id = UUID.randomUUID();
-        when(userJpaRepository.existsByUsernameAndIdNot("ada", id)).thenReturn(false);
-
-        // When
-        boolean result = userRepositoryAdapter.existsByUsernameAndIdNot("ada", id);
-
-        // Then
-        assertThat(result).isFalse();
     }
 
     @Test
@@ -187,26 +173,28 @@ class UserRepositoryAdapterTest {
     }
 
     @Test
-    void findByUsername_shouldReturnMappedUser_whenEntityExists() {
+    void findByAuthIdAndAuthIss_shouldReturnMappedUser_whenEntityExists() {
         // Given
-        UserEntity entity = UserEntity.builder().id(UUID.randomUUID()).username("ada").build();
-        when(userJpaRepository.findByUsername("ada")).thenReturn(Optional.of(entity));
+        UserEntity entity = UserEntity.builder().id(UUID.randomUUID()).username("ada").authId("auth-id").authIss("https://system.internal.localhost").build();
+        when(userJpaRepository.findByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(Optional.of(entity));
 
         // When
-        Optional<User> result = userRepositoryAdapter.findByUsername("ada");
+        Optional<User> result = userRepositoryAdapter.findByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost");
 
         // Then
         assertThat(result).isPresent();
         assertThat(result.get().username()).isEqualTo("ada");
+        assertThat(result.get().authId()).isEqualTo("auth-id");
+        assertThat(result.get().authIss()).isEqualTo("https://system.internal.localhost");
     }
 
     @Test
-    void findByUsername_shouldReturnEmpty_whenEntityAbsent() {
+    void findByAuthIdAndAuthIss_shouldReturnEmpty_whenEntityAbsent() {
         // Given
-        when(userJpaRepository.findByUsername("ada")).thenReturn(Optional.empty());
+        when(userJpaRepository.findByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost")).thenReturn(Optional.empty());
 
         // When
-        Optional<User> result = userRepositoryAdapter.findByUsername("ada");
+        Optional<User> result = userRepositoryAdapter.findByAuthIdAndAuthIss("auth-id", "https://system.internal.localhost");
 
         // Then
         assertThat(result).isEmpty();

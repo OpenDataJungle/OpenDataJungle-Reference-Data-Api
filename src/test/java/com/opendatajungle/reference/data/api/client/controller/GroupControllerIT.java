@@ -47,6 +47,7 @@ class GroupControllerIT {
             Jwt jwt = Jwt.withTokenValue("token")
                     .header("alg", "none")
                     .claim("sub", "tester")
+                    .claim("iss", "https://system.internal.localhost")
                     .claim("preferred_username", "tester")
                     .claim("given_name", "Test")
                     .claim("family_name", "User")
