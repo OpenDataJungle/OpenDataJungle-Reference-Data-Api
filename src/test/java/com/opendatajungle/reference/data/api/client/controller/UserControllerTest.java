@@ -5,6 +5,7 @@ import com.opendatajungle.reference.data.api.business.service.UserUseCase;
 import com.opendatajungle.reference.data.api.client.dto.PaginatedResponse;
 import com.opendatajungle.reference.data.api.client.dto.UserRequest;
 import com.opendatajungle.reference.data.api.client.dto.UserResponse;
+import com.opendatajungle.reference.data.api.client.dto.UserUpdateRequest;
 import com.opendatajungle.reference.data.api.shared.PageResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,7 +101,7 @@ class UserControllerTest {
     void updateUser_shouldDelegateToUseCaseWithIdAndMappedBusinessObject_whenCalled() {
         // Given
         UUID id = UUID.randomUUID();
-        UserRequest request = new UserRequest("alex", "lem", "alexx", "auth-id-2", "https://system.internal.localhost");
+        UserUpdateRequest request = new UserUpdateRequest("alex", "lem", "alexx");
         User updated = User.builder().id(id).username("alexx").build();
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         when(userUseCase.update(eq(id), captor.capture())).thenReturn(updated);

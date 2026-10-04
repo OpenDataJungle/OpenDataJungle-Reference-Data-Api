@@ -32,6 +32,10 @@ public interface GroupUserJpaRepository extends JpaRepository<GroupUserEntity, G
     @Query(value = "INSERT INTO reference_data.group_users (group_id, user_id, permission_id) VALUES (:groupId, :userId, :permissionId)", nativeQuery = true)
     void addUserToGroup(@Param("groupId") UUID groupId, @Param("userId") UUID userId, @Param("permissionId") UUID permissionId);
 
+    @Modifying
+    @Query(value = "UPDATE reference_data.group_users SET permission_id = :permissionId WHERE group_id = :groupId AND user_id = :userId", nativeQuery = true)
+    void updateUserPermission(@Param("groupId") UUID groupId, @Param("userId") UUID userId, @Param("permissionId") UUID permissionId);
+
     @Query("SELECT gu FROM GroupUserEntity gu JOIN FETCH gu.permission WHERE gu.groupId = :groupId")
     Page<GroupUserEntity> findByGroupIdWithPermission(@Param("groupId") UUID groupId, Pageable pageable);
 }

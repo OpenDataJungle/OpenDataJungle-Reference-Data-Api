@@ -26,7 +26,7 @@ public class GroupService implements GroupUseCase {
 
     @Override
     public PageResult<Group> findAll(int page, int size, String name) {
-        return groupRepository.findAll(page, size, name);
+        return groupRepository.findAll(page, size, normalizeName(name));
     }
 
     @Override
@@ -37,14 +37,19 @@ public class GroupService implements GroupUseCase {
 
     @Override
     public Group create(Group group) {
-        if (groupRepository.existsByName(group.name())) {
+        String name = normalizeName(group.name());
+        if (groupRepository.existsByName(name)) {
             throw new ParamException(
                     "GROUP_NAME_ALREADY_EXISTS",
-                    "A group with name '" + group.name() + "' already exists",
+                    "A group with name '" + name + "' already exists",
                     "name"
             );
         }
-        Group created = groupRepository.save(group);
+        Group toCreate = Group.builder()
+                .name(name)
+                .description(group.description())
+                .build();
+        Group created = groupRepository.save(toCreate);
 
         groupUserUseCase.grantGroupAdminForCurrentUser(created.id());
 
@@ -58,16 +63,17 @@ public class GroupService implements GroupUseCase {
         }
         groupUserUseCase.requireGroupAdmin(id, userUseCase.getOrCreateCurrentUser().id());
 
-        if (groupRepository.existsByNameAndIdNot(group.name(), id)) {
+        String name = normalizeName(group.name());
+        if (groupRepository.existsByNameAndIdNot(name, id)) {
             throw new ParamException(
                     "GROUP_NAME_ALREADY_EXISTS",
-                    "A group with name '" + group.name() + "' already exists",
+                    "A group with name '" + name + "' already exists",
                     "name"
             );
         }
         Group toUpdate = Group.builder()
                 .id(id)
-                .name(group.name())
+                .name(name)
                 .description(group.description())
                 .build();
         return groupRepository.save(toUpdate);
@@ -80,5 +86,9 @@ public class GroupService implements GroupUseCase {
         }
         groupUserUseCase.requireGroupAdmin(id, userUseCase.getOrCreateCurrentUser().id());
         groupRepository.deleteById(id);
+    }
+
+    private static String normalizeName(String name) {
+        return name == null ? null : name.toLowerCase();
     }
 }

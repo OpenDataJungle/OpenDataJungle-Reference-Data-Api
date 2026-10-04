@@ -5,6 +5,7 @@ public final class SecurityExpressions {
     public static final String REFERENCEDATA_WRITE = "hasAuthority(@securityScopesProperties.referencedata.write)";
     public static final String REFERENCEDATA_DELETE = "hasAuthority(@securityScopesProperties.referencedata.delete)";
     public static final String REFERENCEDATA_ADMIN = "hasAuthority(@securityScopesProperties.referencedata.admin)";
+    public static final String REFERENCEDATA_ME = "hasAuthority(@securityScopesProperties.referencedata.me)";
 
     private SecurityExpressions() {
     }

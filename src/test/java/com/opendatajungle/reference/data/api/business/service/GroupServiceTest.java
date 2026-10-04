@@ -247,4 +247,65 @@ class GroupServiceTest {
                 .isInstanceOf(AccessDeniedException.class);
         verify(groupRepository, never()).deleteById(any());
     }
+
+    @Test
+    void create_shouldSaveLowerCasedName_whenNameHasUpperCaseLetters() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        Group group = Group.builder().name("Data-Team").description("Data team").build();
+        Group saved = Group.builder().id(groupId).name("data-team").description("Data team").build();
+        when(groupRepository.existsByName("data-team")).thenReturn(false);
+        when(groupRepository.save(any())).thenReturn(saved);
+        ArgumentCaptor<Group> captor = ArgumentCaptor.forClass(Group.class);
+
+        // When
+        groupService.create(group);
+
+        // Then
+        verify(groupRepository).save(captor.capture());
+        assertThat(captor.getValue().name()).isEqualTo("data-team");
+        assertThat(captor.getValue().description()).isEqualTo("Data team");
+    }
+
+    @Test
+    void create_shouldThrowParamException_whenLowerCasedNameAlreadyExists() {
+        // Given
+        when(groupRepository.existsByName("root")).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> groupService.create(Group.builder().name("ROOT").build()))
+                .isInstanceOf(ParamException.class)
+                .satisfies(ex -> assertThat(((ParamException) ex).getCode()).isEqualTo("GROUP_NAME_ALREADY_EXISTS"));
+        verify(groupRepository, never()).save(any());
+    }
+
+    @Test
+    void update_shouldSaveLowerCasedName_whenNameHasUpperCaseLetters() {
+        // Given
+        UUID id = UUID.randomUUID();
+        User currentUser = User.builder().id(UUID.randomUUID()).username("alex").build();
+        when(groupRepository.existsById(id)).thenReturn(true);
+        when(userUseCase.getOrCreateCurrentUser()).thenReturn(currentUser);
+        when(groupRepository.existsByNameAndIdNot("data-team", id)).thenReturn(false);
+        when(groupRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Group result = groupService.update(id, Group.builder().name("Data-TEAM").build());
+
+        // Then
+        assertThat(result.name()).isEqualTo("data-team");
+    }
+
+    @Test
+    void findAll_shouldLowerCaseNameFilter_whenNameProvided() {
+        // Given
+        PageResult<Group> expected = PageResult.<Group>builder().content(List.of()).build();
+        when(groupRepository.findAll(1, 50, "data-team")).thenReturn(expected);
+
+        // When
+        PageResult<Group> result = groupService.findAll(1, 50, "Data-Team");
+
+        // Then
+        assertThat(result).isSameAs(expected);
+    }
 }

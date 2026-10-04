@@ -1,5 +1,6 @@
 package com.opendatajungle.reference.data.api.business.service;
 
+import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Permission;
@@ -55,9 +56,7 @@ public class PermissionService implements PermissionUseCase {
 
     @Override
     public Permission update(UUID id, Permission permission) {
-        if (!permissionRepository.existsById(id)) {
-            throw new NotFoundException(PERMISSION, id.toString());
-        }
+        requireNotDefaultAdminPermission(getById(id));
         if (permissionRepository.existsByNameAndIdNot(permission.name(), id)) {
             throw new ParamException(
                     "PERMISSION_NAME_ALREADY_EXISTS",
@@ -78,9 +77,13 @@ public class PermissionService implements PermissionUseCase {
 
     @Override
     public void delete(UUID id) {
-        if (!permissionRepository.existsById(id)) {
-            throw new NotFoundException(PERMISSION, id.toString());
-        }
+        requireNotDefaultAdminPermission(getById(id));
         permissionRepository.deleteById(id);
+    }
+
+    private static void requireNotDefaultAdminPermission(Permission permission) {
+        if (DEFAULT_ADMIN_PERMISSION.equals(permission.name())) {
+            throw new AccessDeniedException("Permission " + DEFAULT_ADMIN_PERMISSION + " cannot be modified or deleted");
+        }
     }
 }

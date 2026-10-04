@@ -10,10 +10,14 @@ import com.opendatajungle.reference.data.api.business.model.User;
 import com.opendatajungle.reference.data.api.business.repository.GroupRepository;
 import com.opendatajungle.reference.data.api.business.repository.GroupUserRepository;
 import com.opendatajungle.reference.data.api.shared.PageResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 public class GroupUserService implements GroupUserUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(GroupUserService.class);
 
     private static final String GROUP = "Group";
     private static final String USER = "User";
@@ -108,5 +112,22 @@ public class GroupUserService implements GroupUserUseCase {
     @Override
     public void grantGroupAdminForCurrentUser(UUID groupId) {
         grantGroupAdmin(groupId, userUseCase.getOrCreateCurrentUser().id());
+    }
+
+    @Override
+    public void forceGroupAdmin(UUID groupId, UUID userId) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new NotFoundException(GROUP, groupId.toString());
+        }
+        if (!userUseCase.existsById(userId)) {
+            throw new NotFoundException(USER, userId.toString());
+        }
+        UUID adminPermissionId = permissionUseCase.getDefaultAdminPermission().id();
+        if (groupUserRepository.isUserInGroup(groupId, userId)) {
+            groupUserRepository.updateUserPermission(groupId, userId, adminPermissionId);
+        } else {
+            groupUserRepository.addUserToGroup(groupId, userId, adminPermissionId);
+        }
+        log.warn("Group admin rights forced: groupId={}, userId={}", groupId, userId);
     }
 }

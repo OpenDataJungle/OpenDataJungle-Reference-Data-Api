@@ -1,5 +1,6 @@
 package com.opendatajungle.reference.data.api.business.service;
 
+import com.opendatajungle.commons.business.exception.AccessDeniedException;
 import com.opendatajungle.commons.business.exception.NotFoundException;
 import com.opendatajungle.commons.business.exception.ParamException;
 import com.opendatajungle.reference.data.api.business.model.Permission;
@@ -143,7 +144,7 @@ class PermissionServiceTest {
                 .canWrite(false)
                 .isAdmin(true)
                 .build();
-        when(permissionRepository.existsById(id)).thenReturn(true);
+        when(permissionRepository.findById(id)).thenReturn(Optional.of(Permission.builder().id(id).name("existing").build()));
         when(permissionRepository.existsByNameAndIdNot("updated", id)).thenReturn(false);
         ArgumentCaptor<Permission> captor = ArgumentCaptor.forClass(Permission.class);
         when(permissionRepository.save(any())).thenReturn(permission);
@@ -168,7 +169,7 @@ class PermissionServiceTest {
         // Given
         UUID id = UUID.randomUUID();
         Permission permission = Permission.builder().name("updated").build();
-        when(permissionRepository.existsById(id)).thenReturn(false);
+        when(permissionRepository.findById(id)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> permissionService.update(id, permission))
@@ -182,7 +183,7 @@ class PermissionServiceTest {
         // Given
         UUID id = UUID.randomUUID();
         Permission permission = Permission.builder().name("duplicate").build();
-        when(permissionRepository.existsById(id)).thenReturn(true);
+        when(permissionRepository.findById(id)).thenReturn(Optional.of(Permission.builder().id(id).name("existing").build()));
         when(permissionRepository.existsByNameAndIdNot("duplicate", id)).thenReturn(true);
 
         // When & Then
@@ -200,7 +201,7 @@ class PermissionServiceTest {
     void delete_shouldDeletePermission_whenPermissionExists() {
         // Given
         UUID id = UUID.randomUUID();
-        when(permissionRepository.existsById(id)).thenReturn(true);
+        when(permissionRepository.findById(id)).thenReturn(Optional.of(Permission.builder().id(id).name("existing").build()));
 
         // When
         permissionService.delete(id);
@@ -213,12 +214,39 @@ class PermissionServiceTest {
     void delete_shouldThrowNotFoundException_whenPermissionAbsent() {
         // Given
         UUID id = UUID.randomUUID();
-        when(permissionRepository.existsById(id)).thenReturn(false);
+        when(permissionRepository.findById(id)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> permissionService.delete(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Permission not found with id: " + id);
+        verify(permissionRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void update_shouldThrowAccessDeniedException_whenPermissionIsDefaultAdminPermission() {
+        // Given
+        UUID id = UUID.randomUUID();
+        Permission permission = Permission.builder().name("renamed").description("d").canRead(true).canWrite(true).isAdmin(false).build();
+        when(permissionRepository.findById(id)).thenReturn(Optional.of(Permission.builder().id(id).name("DEFAULT_ADMIN_PERMISSION").build()));
+
+        // When & Then
+        assertThatThrownBy(() -> permissionService.update(id, permission))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Permission DEFAULT_ADMIN_PERMISSION cannot be modified or deleted");
+        verify(permissionRepository, never()).save(any());
+    }
+
+    @Test
+    void delete_shouldThrowAccessDeniedException_whenPermissionIsDefaultAdminPermission() {
+        // Given
+        UUID id = UUID.randomUUID();
+        when(permissionRepository.findById(id)).thenReturn(Optional.of(Permission.builder().id(id).name("DEFAULT_ADMIN_PERMISSION").build()));
+
+        // When & Then
+        assertThatThrownBy(() -> permissionService.delete(id))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Permission DEFAULT_ADMIN_PERMISSION cannot be modified or deleted");
         verify(permissionRepository, never()).deleteById(any());
     }
 }

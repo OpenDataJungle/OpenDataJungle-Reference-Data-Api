@@ -8,11 +8,12 @@ DROP TABLE IF EXISTS reference_data.groups;
 DROP TABLE IF EXISTS reference_data.users;
 
 DROP INDEX IF EXISTS idx_group_users_group_id;
+DROP INDEX IF EXISTS idx_group_users_user_id;
 
 CREATE TABLE reference_data.users (
                        id UUID PRIMARY KEY,
-                       first_name VARCHAR NOT NULL,
-                       last_name VARCHAR NOT NULL,
+                       first_name VARCHAR,
+                       last_name VARCHAR,
                        username VARCHAR NOT NULL,
                        auth_id VARCHAR NOT NULL,
                        auth_iss VARCHAR NOT NULL,
@@ -23,16 +24,16 @@ CREATE TABLE reference_data.users (
 
 CREATE TABLE reference_data.groups (
                         id UUID PRIMARY KEY,
-                        name VARCHAR NOT NULL UNIQUE,
-                        description TEXT,
+                        name VARCHAR(255) NOT NULL UNIQUE,
+                        description VARCHAR(255),
                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE reference_data.permissions (
                                         id UUID PRIMARY KEY,
-                                        name VARCHAR NOT NULL UNIQUE,
-                                        description TEXT,
+                                        name VARCHAR(255) NOT NULL UNIQUE,
+                                        description VARCHAR(255),
                                         can_read BOOLEAN NOT NULL DEFAULT FALSE,
                                         can_write BOOLEAN NOT NULL DEFAULT FALSE,
                                         is_admin BOOLEAN NOT NULL DEFAULT FALSE,
@@ -67,4 +68,4 @@ VALUES ('00000000-0000-0000-0000-000000000002', 'DEFAULT_ADMIN_PERMISSION', 'Def
 INSERT INTO reference_data.group_users (group_id, user_id, permission_id)
 VALUES ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001');
 
-CREATE INDEX idx_group_users_group_id ON reference_data.group_users(group_id);
+CREATE INDEX idx_group_users_user_id ON reference_data.group_users(user_id);

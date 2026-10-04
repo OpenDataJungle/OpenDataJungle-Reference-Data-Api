@@ -131,4 +131,42 @@ class PermissionControllerIT {
         mockMvc.perform(get("/api/v1/permissions/" + id))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void updatePermission_shouldReturnForbidden_whenPermissionIsDefaultAdminPermission() throws Exception {
+        // When
+        mockMvc.perform(put("/api/v1/permissions/00000000-0000-0000-0000-000000000002")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PermissionRequest("renamed", "Renamed", true, true, false))))
+                .andExpect(status().isForbidden());
+
+        // Then
+        mockMvc.perform(get("/api/v1/permissions/00000000-0000-0000-0000-000000000002"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("DEFAULT_ADMIN_PERMISSION"))
+                .andExpect(jsonPath("$.isAdmin").value(true));
+    }
+
+    @Test
+    void deletePermission_shouldReturnForbidden_whenPermissionIsDefaultAdminPermission() throws Exception {
+        // When
+        mockMvc.perform(delete("/api/v1/permissions/00000000-0000-0000-0000-000000000002"))
+                .andExpect(status().isForbidden());
+
+        // Then
+        mockMvc.perform(get("/api/v1/permissions/00000000-0000-0000-0000-000000000002"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void createPermission_shouldReturnBadRequest_whenDescriptionExceeds255Characters() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/v1/permissions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PermissionRequest("long-description", "d".repeat(256), true, false, false))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.field").value("description"))
+                .andExpect(jsonPath("$.message").value("Permission description must not exceed 255 characters"));
+    }
 }

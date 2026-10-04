@@ -2,6 +2,7 @@ package com.opendatajungle.reference.data.api.client.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opendatajungle.reference.data.api.client.dto.GroupRequest;
+import com.opendatajungle.reference.data.api.client.dto.PermissionRequest;
 import com.opendatajungle.reference.data.api.client.dto.UserRequest;
 import com.opendatajungle.reference.data.api.testconfig.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -166,6 +168,97 @@ class GroupUserControllerIT {
                 .andExpect(jsonPath("$.code").value("USER_NOT_IN_GROUP"));
     }
 
+    @Test
+    void removeUserFromGroup_shouldLeaveGroupWithoutAdmin_whenLastAdminLeaves() throws Exception {
+        // Given: the anonymous user created the group, so it is its only admin
+        String groupId = createGroup("engineering", "Engineering group");
+
+        // When
+        mockMvc.perform(delete("/api/v1/groups/" + groupId + "/users/" + ROOT_USER_ID)
+                        .with(authenticated()))
+                .andExpect(status().isOk());
+
+        // Then
+        mockMvc.perform(get("/api/v1/groups/" + groupId + "/users"))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void forceGroupAdmin_shouldRestoreAnAdmin_whenGroupHasNoAdminLeft() throws Exception {
+        // Given: the creator leaves, so the group has no admin
+        String groupId = createGroup("orphan", "Orphan group");
+        mockMvc.perform(delete("/api/v1/groups/" + groupId + "/users/" + ROOT_USER_ID).with(authenticated()))
+                .andExpect(status().isOk());
+        String userId = createUser("Grace", "Hopper", "grace");
+
+        // When
+        mockMvc.perform(put(forceGroupAdminPath(groupId, userId)))
+                .andExpect(status().isOk());
+
+        // Then
+        mockMvc.perform(get("/api/v1/groups/" + groupId + "/users"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].user.username").value("grace"))
+                .andExpect(jsonPath("$.content[0].permission.name").value("DEFAULT_ADMIN_PERMISSION"));
+    }
+
+    @Test
+    void forceGroupAdmin_shouldUpgradePermission_whenUserIsAlreadyMember() throws Exception {
+        // Given
+        String groupId = createGroup("engineering", "Engineering group");
+        String userId = createUser("Grace", "Hopper", "grace");
+        String readOnlyPermissionId = createReadOnlyPermission();
+        mockMvc.perform(post("/api/v1/groups/" + groupId + "/users/" + userId + "/permissions/" + readOnlyPermissionId)
+                        .with(authenticated()))
+                .andExpect(status().isCreated());
+
+        // When
+        mockMvc.perform(put(forceGroupAdminPath(groupId, userId)))
+                .andExpect(status().isOk());
+
+        // Then
+        mockMvc.perform(get("/api/v1/users/" + userId + "/groups"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].permission.name").value("DEFAULT_ADMIN_PERMISSION"))
+                .andExpect(jsonPath("$.content[0].permission.isAdmin").value(true));
+    }
+
+    @Test
+    void forceGroupAdmin_shouldBeIdempotent_whenCalledTwice() throws Exception {
+        // Given
+        String groupId = createGroup("engineering", "Engineering group");
+        String userId = createUser("Grace", "Hopper", "grace");
+
+        // When
+        mockMvc.perform(put(forceGroupAdminPath(groupId, userId))).andExpect(status().isOk());
+        mockMvc.perform(put(forceGroupAdminPath(groupId, userId))).andExpect(status().isOk());
+
+        // Then: the creator and grace
+        mockMvc.perform(get("/api/v1/groups/" + groupId + "/users"))
+                .andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    void forceGroupAdmin_shouldReturnNotFound_whenGroupDoesNotExist() throws Exception {
+        // When & Then
+        mockMvc.perform(put(forceGroupAdminPath(UUID.randomUUID().toString(), ROOT_USER_ID)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void forceGroupAdmin_shouldReturnNotFound_whenUserDoesNotExist() throws Exception {
+        // Given
+        String groupId = createGroup("engineering", "Engineering group");
+
+        // When & Then
+        mockMvc.perform(put(forceGroupAdminPath(groupId, UUID.randomUUID().toString())))
+                .andExpect(status().isNotFound());
+    }
+
+    private String forceGroupAdminPath(String groupId, String userId) {
+        return "/api/v1/groups/" + groupId + "/users/" + userId + "/force-admin";
+    }
+
     private String createGroup(String name, String description) throws Exception {
         String response = mockMvc.perform(post("/api/v1/groups")
                         .with(authenticated())
@@ -180,6 +273,15 @@ class GroupUserControllerIT {
         String response = mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UserRequest(firstName, lastName, username, username + "-auth-id", "https://system.internal.localhost"))))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("id").asText();
+    }
+
+    private String createReadOnlyPermission() throws Exception {
+        String response = mockMvc.perform(post("/api/v1/permissions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PermissionRequest("read-only", "Read only", true, false, false))))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("id").asText();

@@ -34,4 +34,10 @@ public interface GroupUserUseCase {
      * admin permission (see {@link PermissionUseCase#getDefaultAdminPermission()}).
      */
     void grantGroupAdminForCurrentUser(UUID groupId);
+
+    /**
+     * Makes the given user admin of the given group (adding it or upgrading its permission) without
+     * checking the caller's rights on that group: recovery path for groups left without any admin.
+     */
+    void forceGroupAdmin(UUID groupId, UUID userId);
 }

@@ -139,4 +139,18 @@ class GroupUserRepositoryAdapterTest {
         // Then
         assertThat(result).isTrue();
     }
+
+    @Test
+    void updateUserPermission_shouldDelegateToJpaRepository_whenCalled() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID permissionId = UUID.randomUUID();
+
+        // When
+        groupUserRepositoryAdapter.updateUserPermission(groupId, userId, permissionId);
+
+        // Then
+        verify(groupUserJpaRepository).updateUserPermission(groupId, userId, permissionId);
+    }
 }

@@ -68,8 +68,6 @@ public class UserRepositoryAdapter implements UserRepository {
             entity.setFirstName(user.firstName());
             entity.setLastName(user.lastName());
             entity.setUsername(user.username());
-            entity.setAuthId(user.authId());
-            entity.setAuthIss(user.authIss());
         } else {
             entity = toEntity(user);
             entity.setId(UUID.randomUUID());

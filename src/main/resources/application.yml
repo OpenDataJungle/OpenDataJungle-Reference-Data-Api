@@ -31,6 +31,7 @@ security:
       write: ${SECURITY_SCOPE_REFERENCEDATA_WRITE:referencedata.write}
       delete: ${SECURITY_SCOPE_REFERENCEDATA_DELETE:referencedata.delete}
       admin: ${SECURITY_SCOPE_REFERENCEDATA_ADMIN:referencedata.admin}
+      me: ${SECURITY_SCOPE_REFERENCEDATA_ME:referencedata.me}
 
 server:
   port: ${SERVER_PORT:8083}

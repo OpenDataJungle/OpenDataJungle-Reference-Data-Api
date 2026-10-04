@@ -104,4 +104,17 @@ class GroupUserControllerTest {
         // Then
         verify(groupUserUseCase).removeUserFromGroup(groupId, userId);
     }
+
+    @Test
+    void forceGroupAdmin_shouldDelegateToUseCase_whenCalled() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        // When
+        groupUserController.forceGroupAdmin(groupId, userId);
+
+        // Then
+        verify(groupUserUseCase).forceGroupAdmin(groupId, userId);
+    }
 }

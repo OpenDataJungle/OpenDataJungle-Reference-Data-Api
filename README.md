@@ -20,7 +20,7 @@ Hexagonal architecture (Ports & Adapters): `client` (REST controllers/DTOs) → 
 - **Group membership**: attach/remove a user to a group with a given permission, list a user's groups or a group's
   members
 - Pagination + filtering (by username / group name) on list endpoints
-- OAuth2/JWT security, scope-based (`referencedata.read|write|delete|admin`)
+- OAuth2/JWT security, scope-based (`referencedata.read|write|delete|admin|me`)
 
 ## Tech stack
 
@@ -95,12 +95,13 @@ Configuration lives in `src/main/resources/application.yml` and is overridable v
 
 #### Security
 
-| Variable                              | Description                            | Default                |
-|---------------------------------------|----------------------------------------|------------------------|
-| `SECURITY_SCOPE_REFERENCEDATA_READ`   | Scope to read users/groups/permissions | `referencedata.read`   |
-| `SECURITY_SCOPE_REFERENCEDATA_WRITE`  | Scope to create/update                 | `referencedata.write`  |
-| `SECURITY_SCOPE_REFERENCEDATA_DELETE` | Scope to delete                        | `referencedata.delete` |
-| `SECURITY_SCOPE_REFERENCEDATA_ADMIN`  | Reserved admin scope                   | `referencedata.admin`  |
+| Variable                              | Description                                          | Default                |
+|---------------------------------------|------------------------------------------------------|------------------------|
+| `SECURITY_SCOPE_REFERENCEDATA_READ`   | Scope to read users/groups/permissions               | `referencedata.read`   |
+| `SECURITY_SCOPE_REFERENCEDATA_WRITE`  | Scope to create/update                               | `referencedata.write`  |
+| `SECURITY_SCOPE_REFERENCEDATA_DELETE` | Scope to delete                                      | `referencedata.delete` |
+| `SECURITY_SCOPE_REFERENCEDATA_ADMIN`  | Admin scope: manage users and permissions            | `referencedata.admin`  |
+| `SECURITY_SCOPE_REFERENCEDATA_ME`     | Self-service scope (`/users/me`), for every end user | `referencedata.me`     |
 
 See `application.yml` for the full list.
 
@@ -131,24 +132,23 @@ In production, no profile is active by default, so OAuth2/JWT authentication is 
 |---------------------------|----------------------------------------------------------------------|------------------------|--------------------------------------------|
 | `GET`                     | `/api/v1/users`                                                      | read                   | List users (paginated, filter by username) |
 | `GET`                     | `/api/v1/users/{id}`                                                 | read                   | Get user by id                             |
-| `GET`                     | `/api/v1/users/username/{username}`                                  | read                   | Get user by username                       |
-| `POST`                    | `/api/v1/users/me`                                                   | read                   | Get or create current user                 |
-| `POST` / `PUT` / `DELETE` | `/api/v1/users/{id}`                                                 | write / write / delete | Create / update / delete user              |
+| `POST`                    | `/api/v1/users/me`                                                   | me                     | Get or create current user                 |
+| `POST` / `PUT` / `DELETE` | `/api/v1/users/{id}`                                                 | admin                  | Create / update / delete user              |
 | `GET`                     | `/api/v1/groups`                                                     | read                   | List groups (paginated, filter by name)    |
 | `GET`                     | `/api/v1/groups/{id}`                                                | read                   | Get group by id                            |
 | `POST` / `PUT` / `DELETE` | `/api/v1/groups/{id}`                                                | write / write / delete | Create / update / delete group             |
 | `GET`                     | `/api/v1/permissions`                                                | read                   | List permissions (paginated)               |
 | `GET`                     | `/api/v1/permissions/{id}`                                           | read                   | Get permission by id                       |
-| `POST` / `PUT` / `DELETE` | `/api/v1/permissions/{id}`                                           | write / write / delete | Create / update / delete permission        |
+| `POST` / `PUT` / `DELETE` | `/api/v1/permissions/{id}`                                           | admin                  | Create / update / delete permission        |
 | `GET`                     | `/api/v1/users/{userId}/groups`                                      | read                   | List a user's groups                       |
 | `GET`                     | `/api/v1/groups/{groupId}/users`                                     | read                   | List a group's members                     |
 | `POST`                    | `/api/v1/groups/{groupId}/users/{userId}/permissions/{permissionId}` | write                  | Add user to group                          |
 | `DELETE`                  | `/api/v1/groups/{groupId}/users/{userId}`                            | delete                 | Remove user from group                     |
+| `PUT`                     | `/api/v1/groups/{groupId}/users/{userId}/force-admin`                | admin                  | Make a user admin of any group (recovery)  |
 
 The full OpenAPI 3 specification is available at [
 `docs/OpenDataJungleReferenceDataAPI_Openapi.json`](docs/OpenDataJungleReferenceDataAPI_Openapi.json). It's regenerated
 from the running application (`/v3/api-docs`) by the `OpenApiGenerationIT` integration test:
-
 
 ## Contributing
 

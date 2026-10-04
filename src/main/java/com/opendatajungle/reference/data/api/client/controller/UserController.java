@@ -5,6 +5,7 @@ import com.opendatajungle.reference.data.api.business.service.UserUseCase;
 import com.opendatajungle.reference.data.api.client.dto.PaginatedResponse;
 import com.opendatajungle.reference.data.api.client.dto.UserRequest;
 import com.opendatajungle.reference.data.api.client.dto.UserResponse;
+import com.opendatajungle.reference.data.api.client.dto.UserUpdateRequest;
 import com.opendatajungle.reference.data.api.client.mapper.PaginatedResponseMapper;
 import com.opendatajungle.reference.data.api.client.security.SecurityExpressions;
 import com.opendatajungle.reference.data.api.shared.PageResult;
@@ -53,13 +54,13 @@ public class UserController {
         return UserResponse.fromBusiness(userUseCase.getById(id));
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_READ)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ME)
     @PostMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserResponse getOrCreateMe() {
         return UserResponse.fromBusiness(userUseCase.getOrCreateCurrentUser());
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_WRITE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ADMIN)
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public UserResponse createUser(@Valid @RequestBody UserRequest userRequest) {
@@ -67,16 +68,16 @@ public class UserController {
         return UserResponse.fromBusiness(createdUser);
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_WRITE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ADMIN)
     @PutMapping("/{id}")
     public UserResponse updateUser(
             @PathVariable UUID id,
-            @Valid @RequestBody UserRequest userRequest) {
-        User updatedUser = userUseCase.update(id, userRequest.toBusiness());
+            @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
+        User updatedUser = userUseCase.update(id, userUpdateRequest.toBusiness());
         return UserResponse.fromBusiness(updatedUser);
     }
 
-    @PreAuthorize(SecurityExpressions.REFERENCEDATA_DELETE)
+    @PreAuthorize(SecurityExpressions.REFERENCEDATA_ADMIN)
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable UUID id) {
         userUseCase.delete(id);

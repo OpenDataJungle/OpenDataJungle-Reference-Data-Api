@@ -337,4 +337,70 @@ class GroupUserServiceTest {
         // When & Then
         groupUserService.requireGroupAdmin(groupId, userId);
     }
+
+    @Test
+    void forceGroupAdmin_shouldAddUserAsAdmin_whenUserIsNotMember() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Permission adminPermission = Permission.builder().id(UUID.randomUUID()).name("DEFAULT_ADMIN_PERMISSION").build();
+        when(groupRepository.existsById(groupId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(permissionUseCase.getDefaultAdminPermission()).thenReturn(adminPermission);
+        when(groupUserRepository.isUserInGroup(groupId, userId)).thenReturn(false);
+
+        // When
+        groupUserService.forceGroupAdmin(groupId, userId);
+
+        // Then
+        verify(groupUserRepository).addUserToGroup(groupId, userId, adminPermission.id());
+        verify(groupUserRepository, never()).updateUserPermission(any(), any(), any());
+    }
+
+    @Test
+    void forceGroupAdmin_shouldUpgradePermission_whenUserIsAlreadyMember() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Permission adminPermission = Permission.builder().id(UUID.randomUUID()).name("DEFAULT_ADMIN_PERMISSION").build();
+        when(groupRepository.existsById(groupId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(true);
+        when(permissionUseCase.getDefaultAdminPermission()).thenReturn(adminPermission);
+        when(groupUserRepository.isUserInGroup(groupId, userId)).thenReturn(true);
+
+        // When
+        groupUserService.forceGroupAdmin(groupId, userId);
+
+        // Then
+        verify(groupUserRepository).updateUserPermission(groupId, userId, adminPermission.id());
+        verify(groupUserRepository, never()).addUserToGroup(any(), any(), any());
+    }
+
+    @Test
+    void forceGroupAdmin_shouldThrowNotFoundException_whenGroupAbsent() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        when(groupRepository.existsById(groupId)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> groupUserService.forceGroupAdmin(groupId, UUID.randomUUID()))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Group not found with id: " + groupId);
+        verify(groupUserRepository, never()).addUserToGroup(any(), any(), any());
+    }
+
+    @Test
+    void forceGroupAdmin_shouldThrowNotFoundException_whenUserAbsent() {
+        // Given
+        UUID groupId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(groupRepository.existsById(groupId)).thenReturn(true);
+        when(userUseCase.existsById(userId)).thenReturn(false);
+
+        // When & Then
+        assertThatThrownBy(() -> groupUserService.forceGroupAdmin(groupId, userId))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("User not found with id: " + userId);
+        verify(groupUserRepository, never()).addUserToGroup(any(), any(), any());
+    }
 }

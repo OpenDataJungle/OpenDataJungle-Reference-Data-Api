@@ -19,5 +19,6 @@ public class SecurityScopesProperties {
         private String write;
         private String delete;
         private String admin;
+        private String me;
     }
 }

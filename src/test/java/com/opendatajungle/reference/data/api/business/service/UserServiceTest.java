@@ -273,41 +273,4 @@ class UserServiceTest {
                     assertThat(paramException.getField()).isEqualTo("username");
                 });
     }
-
-    @Test
-    void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentFirstNameBlank() {
-        // Given
-        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
-        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
-        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("ada"));
-        when(authenticationUseCase.findCurrentUserFirstName()).thenReturn(Optional.of(""));
-
-        // When & Then
-        assertThatThrownBy(() -> userService.getOrCreateCurrentUser())
-                .isInstanceOf(ParamException.class)
-                .satisfies(ex -> {
-                    ParamException paramException = (ParamException) ex;
-                    assertThat(paramException.getCode()).isEqualTo("USER_FIRST_NAME_REQUIRED");
-                    assertThat(paramException.getField()).isEqualTo("firstName");
-                });
-    }
-
-    @Test
-    void getOrCreateCurrentUser_shouldThrowParamException_whenCurrentLastNameBlank() {
-        // Given
-        when(authenticationUseCase.findCurrentUserAuthId()).thenReturn(Optional.of("auth-id"));
-        when(authenticationUseCase.findCurrentUserAuthIss()).thenReturn(Optional.of("https://system.internal.localhost"));
-        when(authenticationUseCase.findCurrentUserUsername()).thenReturn(Optional.of("ada"));
-        when(authenticationUseCase.findCurrentUserFirstName()).thenReturn(Optional.of("Ada"));
-        when(authenticationUseCase.findCurrentUserLastName()).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> userService.getOrCreateCurrentUser())
-                .isInstanceOf(ParamException.class)
-                .satisfies(ex -> {
-                    ParamException paramException = (ParamException) ex;
-                    assertThat(paramException.getCode()).isEqualTo("USER_LAST_NAME_REQUIRED");
-                    assertThat(paramException.getField()).isEqualTo("lastName");
-                });
-    }
 }

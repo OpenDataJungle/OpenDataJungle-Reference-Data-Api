@@ -117,18 +117,10 @@ public class UserService implements UserUseCase {
                 ));
         String firstName = authenticationUseCase.findCurrentUserFirstName()
                 .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParamException(
-                        "USER_FIRST_NAME_REQUIRED",
-                        "Current authenticated user has no first name",
-                        "firstName"
-                ));
+                .orElse(null);
         String lastName = authenticationUseCase.findCurrentUserLastName()
                 .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParamException(
-                        "USER_LAST_NAME_REQUIRED",
-                        "Current authenticated user has no last name",
-                        "lastName"
-                ));
+                .orElse(null);
 
         return userRepository.findByAuthIdAndAuthIss(authId, authIss)
                 .orElseGet(() -> userRepository.save(User.builder()

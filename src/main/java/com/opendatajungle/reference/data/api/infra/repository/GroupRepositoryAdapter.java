@@ -66,7 +66,7 @@ public class GroupRepositoryAdapter implements GroupRepository {
         GroupEntity entity;
         if (group.id() != null) {
             entity = groupJpaRepository.findById(group.id()).orElseThrow(() -> new NotFoundException("Group", group.id().toString()));
-            entity.setName(group.name());
+            entity.setName(group.name().toLowerCase());
             entity.setDescription(group.description());
         } else {
             entity = toEntity(group);
@@ -84,13 +84,13 @@ public class GroupRepositoryAdapter implements GroupRepository {
     @Override
     @Transactional(readOnly = true)
     public boolean existsByName(String name) {
-        return groupJpaRepository.existsByName(name);
+        return groupJpaRepository.existsByName(name.toLowerCase());
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByNameAndIdNot(String name, UUID id) {
-        return groupJpaRepository.existsByNameAndIdNot(name, id);
+        return groupJpaRepository.existsByNameAndIdNot(name.toLowerCase(), id);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class GroupRepositoryAdapter implements GroupRepository {
     private GroupEntity toEntity(Group group) {
         return GroupEntity.builder()
                 .id(group.id())
-                .name(group.name())
+                .name(group.name().toLowerCase())
                 .description(group.description())
                 .createdAt(group.createdAt())
                 .updatedAt(group.updatedAt())

@@ -14,6 +14,8 @@ public interface GroupUserRepository {
 
     void addUserToGroup(UUID groupId, UUID userId, UUID permissionId);
 
+    void updateUserPermission(UUID groupId, UUID userId, UUID permissionId);
+
     void removeUserFromGroup(UUID groupId, UUID userId);
 
     boolean isUserInGroup(UUID groupId, UUID userId);

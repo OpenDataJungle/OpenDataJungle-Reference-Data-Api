@@ -107,8 +107,10 @@ class UserRepositoryAdapterTest {
     void save_shouldUpdateOnlyMutableFields_whenUserIdExists() {
         // Given
         UUID id = UUID.randomUUID();
-        UserEntity existing = UserEntity.builder().id(id).firstName("old").lastName("old").username("old").build();
-        User user = User.builder().id(id).firstName("Ada").lastName("Lovelace").username("updated").build();
+        UserEntity existing = UserEntity.builder().id(id).firstName("old").lastName("old").username("old")
+                .authId("stored-auth-id").authIss("https://stored.issuer").build();
+        User user = User.builder().id(id).firstName("Ada").lastName("Lovelace").username("updated")
+                .authId("other-auth-id").authIss("https://other.issuer").build();
         when(userJpaRepository.findById(id)).thenReturn(Optional.of(existing));
         when(userJpaRepository.save(existing)).thenReturn(existing);
 
@@ -119,7 +121,11 @@ class UserRepositoryAdapterTest {
         assertThat(existing.getFirstName()).isEqualTo("Ada");
         assertThat(existing.getLastName()).isEqualTo("Lovelace");
         assertThat(existing.getUsername()).isEqualTo("updated");
+        assertThat(existing.getAuthId()).isEqualTo("stored-auth-id");
+        assertThat(existing.getAuthIss()).isEqualTo("https://stored.issuer");
         assertThat(result.username()).isEqualTo("updated");
+        assertThat(result.authId()).isEqualTo("stored-auth-id");
+        assertThat(result.authIss()).isEqualTo("https://stored.issuer");
     }
 
     @Test

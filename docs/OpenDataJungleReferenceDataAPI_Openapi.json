@@ -51,7 +51,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UserRequest"
+                "$ref" : "#/components/schemas/UserUpdateRequest"
               }
             }
           },
@@ -235,6 +235,34 @@
         "operationId" : "deleteGroup",
         "parameters" : [ {
           "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{groupId}/users/{userId}/force-admin" : {
+      "put" : {
+        "tags" : [ "group-user-controller" ],
+        "operationId" : "forceGroupAdmin",
+        "parameters" : [ {
+          "name" : "groupId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "userId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -563,32 +591,6 @@
         }
       }
     },
-    "/api/v1/users/username/{username}" : {
-      "get" : {
-        "tags" : [ "user-controller" ],
-        "operationId" : "getUserByUsername",
-        "parameters" : [ {
-          "name" : "username",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/groups/{groupId}/users" : {
       "get" : {
         "tags" : [ "group-user-controller" ],
@@ -668,7 +670,7 @@
   },
   "components" : {
     "schemas" : {
-      "UserRequest" : {
+      "UserUpdateRequest" : {
         "type" : "object",
         "properties" : {
           "firstName" : {
@@ -702,6 +704,12 @@
           "username" : {
             "type" : "string"
           },
+          "authId" : {
+            "type" : "string"
+          },
+          "authIss" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -717,11 +725,13 @@
         "properties" : {
           "name" : {
             "type" : "string",
-            "minLength" : 1
+            "maxLength" : 255,
+            "minLength" : 0
           },
           "description" : {
             "type" : "string",
-            "minLength" : 1
+            "maxLength" : 255,
+            "minLength" : 0
           },
           "canRead" : {
             "type" : "boolean"
@@ -764,10 +774,14 @@
         "properties" : {
           "name" : {
             "type" : "string",
-            "minLength" : 1
+            "maxLength" : 255,
+            "minLength" : 0,
+            "pattern" : "[a-zA-Z._-]+"
           },
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
           }
         },
         "required" : [ "name" ]
@@ -794,6 +808,32 @@
             "format" : "date-time"
           }
         }
+      },
+      "UserRequest" : {
+        "type" : "object",
+        "properties" : {
+          "firstName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "lastName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "username" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "authId" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "authIss" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "authId", "authIss", "firstName", "lastName", "username" ]
       },
       "PaginatedResponseUserResponse" : {
         "type" : "object",

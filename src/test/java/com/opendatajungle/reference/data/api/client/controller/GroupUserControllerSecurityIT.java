@@ -20,6 +20,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -34,6 +35,8 @@ class GroupUserControllerSecurityIT {
     private static final String READ_SCOPE = "referencedata.read";
     private static final String WRITE_SCOPE = "referencedata.write";
     private static final String DELETE_SCOPE = "referencedata.delete";
+    private static final String ME_SCOPE = "referencedata.me";
+    private static final String ADMIN_SCOPE = "referencedata.admin";
 
     @Autowired
     private MockMvc mockMvc;
@@ -136,11 +139,36 @@ class GroupUserControllerSecurityIT {
                 .andExpect(status().isNotFound());
     }
 
+    // --- forceGroupAdmin ---
+
+    @Test
+    void forceGroupAdmin_shouldReturn401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(put(forceGroupAdminPath(SEEDED_ID, SEEDED_ID)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void forceGroupAdmin_shouldReturn403_whenAdminScopeMissing() throws Exception {
+        mockMvc.perform(withScopes(put(forceGroupAdminPath(SEEDED_ID, SEEDED_ID)), READ_SCOPE, WRITE_SCOPE, DELETE_SCOPE, ME_SCOPE))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void forceGroupAdmin_shouldPassAuthorizationAndReachBusinessLogic_whenAdminScopePresent() throws Exception {
+        // Authorization passes (no 403); request reaches GroupUserService, which reports 404 for an unknown group id
+        mockMvc.perform(withScopes(put(forceGroupAdminPath(UNKNOWN_ID, SEEDED_ID)), ADMIN_SCOPE))
+                .andExpect(status().isNotFound());
+    }
+
     private String addUserToGroupPath(String groupId, String userId, String permissionId) {
         return "/api/v1/groups/" + groupId + "/users/" + userId + "/permissions/" + permissionId;
     }
 
     private String removeUserFromGroupPath(String groupId, String userId) {
         return "/api/v1/groups/" + groupId + "/users/" + userId;
+    }
+
+    private String forceGroupAdminPath(String groupId, String userId) {
+        return "/api/v1/groups/" + groupId + "/users/" + userId + "/force-admin";
     }
 }

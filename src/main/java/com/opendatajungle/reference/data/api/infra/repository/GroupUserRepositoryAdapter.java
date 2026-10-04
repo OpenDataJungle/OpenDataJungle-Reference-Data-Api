@@ -79,6 +79,12 @@ public class GroupUserRepositoryAdapter implements GroupUserRepository {
 
     @Override
     @Transactional
+    public void updateUserPermission(UUID groupId, UUID userId, UUID permissionId) {
+        groupUserJpaRepository.updateUserPermission(groupId, userId, permissionId);
+    }
+
+    @Override
+    @Transactional
     public void removeUserFromGroup(UUID groupId, UUID userId) {
         groupUserJpaRepository.removeUserFromGroup(groupId, userId);
     }

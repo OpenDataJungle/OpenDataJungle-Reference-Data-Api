@@ -2,6 +2,7 @@ package com.opendatajungle.reference.data.api.client.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opendatajungle.reference.data.api.client.dto.UserRequest;
+import com.opendatajungle.reference.data.api.client.dto.UserUpdateRequest;
 import com.opendatajungle.reference.data.api.testconfig.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,11 +111,13 @@ class UserControllerIT {
         // When & Then
         mockMvc.perform(put("/api/v1/users/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UserRequest("After", "Update", "updated", "updated-auth-id", "https://system.internal.localhost"))))
+                        .content(objectMapper.writeValueAsString(new UserUpdateRequest("After", "Update", "updated"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("updated"))
                 .andExpect(jsonPath("$.lastName").value("Update"))
-                .andExpect(jsonPath("$.firstName").value("After"));
+                .andExpect(jsonPath("$.firstName").value("After"))
+                .andExpect(jsonPath("$.authId").value("to-update-auth-id"))
+                .andExpect(jsonPath("$.authIss").value("https://system.internal.localhost"));
     }
 
     @Test
